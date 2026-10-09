@@ -179,17 +179,16 @@ def selftest(report):
 
 
 def _selftest_radish():
-    """radish's Nexus zip is found where a download lands (the release brings none: make_release puts it into the
-    sandbox's Downloads), is the one from Nexus, unpacks (into Documents\\Conjunction\\tools) and checks against
-    radish's list."""
+    """radish's Nexus zip is found - in the GitHub release beside the app (_internal\\third_party\\radish), else where a
+    download lands (the Nexus release brings none: make_release puts it into the sandbox's Downloads) -, is the one
+    from Nexus, unpacks (into Documents\\Conjunction\\tools) and checks against radish's list."""
     from . import radish_tools as R
-    if R.bundled_zip():
-        raise RuntimeError("the release brings a radish zip (Nexus quarantines a zip inside a zip)")
     z = R.find_zip()
     if not z:
-        raise RuntimeError("the radish zip is not found in Downloads")
+        raise RuntimeError("the radish zip is not found (beside the app or in Downloads)")
     dest = R.install("", log=lambda s: None)
-    return f"{os.path.basename(z)} unpacked, {len(R.expected(dest))} files as radish shipped them"
+    where = "brought by the release" if z == R.bundled_zip() else "from Downloads"
+    return f"{os.path.basename(z)} {where}, unpacked, {len(R.expected(dest))} files as radish shipped them"
 
 
 def _selftest_signing():

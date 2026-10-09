@@ -44,27 +44,34 @@ def own_bootloader(work):
     return pyi
 
 
+TOP = {"Conjunction.exe", "_internal", "Guide.pdf", "LICENSE.txt"}   # all a user sees after unpacking (Maxim 09.10.)
+
+
 def bring_guide(dist):
-    """The guide in docs beside Conjunction.exe, where the Nexus page says it is: one PDF of the slides (Maxim
-    09.10.: the .pptx stays here, it makes the PDF)."""
-    dst = os.path.join(dist, "Conjunction", "docs")
-    os.makedirs(dst, exist_ok=True)
-    for f in ("first-quest.pdf",):
-        shutil.copy2(os.path.join(ROOT, "docs", f), os.path.join(dst, f))
-    print("guide:", sorted(os.listdir(dst)))
+    """The guide beside Conjunction.exe as Guide.pdf: one PDF of the slides (Maxim 09.10.: the .pptx stays here, it
+    makes the PDF; at the top only the exe and a few files)."""
+    top = os.path.join(dist, "Conjunction")
+    shutil.rmtree(os.path.join(top, "docs"), ignore_errors=True)          # (the folder of before 09.10.)
+    shutil.copy2(os.path.join(ROOT, "docs", "first-quest.pdf"), os.path.join(top, "Guide.pdf"))
+    print("guide: Guide.pdf")
 
 
 def bring_notices(dist):
     """Who made the software inside Conjunction.exe and its licenses (09.10.: Qt for Python is LGPL-3.0, its text and
-    the notice have to go along) - THIRD_PARTY_NOTICES.txt and the licenses folder beside Conjunction.exe."""
+    the notice have to go along) - THIRD_PARTY_NOTICES.txt and the licenses folder in _internal, Conjunction's own
+    LICENSE.txt beside the exe."""
     src = os.path.join(ROOT, "third_party")
     top = os.path.join(dist, "Conjunction")
-    shutil.copy2(os.path.join(src, "THIRD_PARTY_NOTICES.txt"), os.path.join(top, "THIRD_PARTY_NOTICES.txt"))
+    inner = os.path.join(top, "_internal")
+    for old in ("THIRD_PARTY_NOTICES.txt", "licenses"):                     # (beside the exe before 09.10.)
+        p = os.path.join(top, old)
+        shutil.rmtree(p) if os.path.isdir(p) else (os.remove(p) if os.path.exists(p) else None)
+    shutil.copy2(os.path.join(src, "THIRD_PARTY_NOTICES.txt"), os.path.join(inner, "THIRD_PARTY_NOTICES.txt"))
     shutil.copy2(os.path.join(ROOT, "LICENSE"), os.path.join(top, "LICENSE.txt"))      # Conjunction's own (09.10.)
-    shutil.rmtree(os.path.join(top, "licenses"), ignore_errors=True)
-    shutil.copytree(os.path.join(src, "licenses"), os.path.join(top, "licenses"))
+    shutil.rmtree(os.path.join(inner, "licenses"), ignore_errors=True)
+    shutil.copytree(os.path.join(src, "licenses"), os.path.join(inner, "licenses"))
     named = open(os.path.join(src, "THIRD_PARTY_NOTICES.txt"), encoding="utf-8").read()
-    have = set(os.listdir(os.path.join(top, "licenses")))
+    have = set(os.listdir(os.path.join(inner, "licenses")))
     import re
     missing = sorted({f for f in re.findall(r"licenses/([\w.-]+\.txt)", named)} - have)
     if missing or not os.path.isdir(os.path.join(dist, "Conjunction", "_internal", "PySide6")):
@@ -121,12 +128,15 @@ def main():
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     zpath = os.path.join(a.out, f"Conjunction-{__version__}.zip")
+    base = os.path.join(dist, "Conjunction")
+    if set(os.listdir(base)) != TOP:
+        raise SystemExit(f"beside Conjunction.exe: {sorted(os.listdir(base))}, wanted {sorted(TOP)} - no release")
+    # the files at the zip's top (09.10.): Extract All makes the folder, Conjunction.exe is the first thing in it
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
-        base = os.path.join(dist, "Conjunction")
         for r, _d, files in os.walk(base):
             for f in files:
                 p = os.path.join(r, f)
-                z.write(p, os.path.join("Conjunction", os.path.relpath(p, base)))
+                z.write(p, os.path.relpath(p, base))
     # nothing inside that is an archive itself (09.10.: Nexus quarantined the release for a zip inside the zip)
     archives = (".zip", ".7z", ".rar", ".cab", ".tar", ".gz", ".jar", ".pptx", ".docx", ".xlsx", ".w3q", ".pyz")
     with zipfile.ZipFile(zpath) as z:
@@ -145,7 +155,7 @@ def main():
 
 def with_radish(zpath):
     """The GitHub release (Maxim 09.10.): the Nexus zip plus radish's own Nexus zip, unchanged, in
-    Conjunction\\third_party\\radish - rmemr's wish ("the unmodified nexusmod zip, so it's easier to verify by users"),
+    _internal\\third_party\\radish - rmemr's wish ("the unmodified nexusmod zip, so it's easier to verify by users"),
     and the first start finds it there (radish_tools.bundled_zip). Nexus takes no zip inside a zip, so this one is
     for GitHub only."""
     from conjunction import radish_tools as R
@@ -157,7 +167,7 @@ def with_radish(zpath):
         for i in zin.infolist():
             z.writestr(i, zin.read(i))
         for f in (R.ZIP_NAME, "README.txt"):
-            z.write(os.path.join(src, f), f"Conjunction/third_party/radish/{f}",
+            z.write(os.path.join(src, f), f"_internal/third_party/radish/{f}",
                     zipfile.ZIP_STORED if f.endswith(".zip") else zipfile.ZIP_DEFLATED)
     h = hashlib.sha256(open(out, "rb").read()).hexdigest()
     open(out + ".sha256", "w").write(f"{h}  {os.path.basename(out)}\n")
@@ -170,9 +180,11 @@ VTCHECK = os.environ.get("VTCHECK", r"C:\Desktop\Ablage\Projekte\vtcheck\vtcheck
 
 def vt_check(zpath):
     """Every upload to Nexus goes through VirusTotal first and needs 0 hits (Maxim 09.10.; Nexus quarantines at 5).
-    --deep: each binary inside too, so a hit says which file it is."""
+    The zip first (what Nexus checks); only on a hit each binary inside too (--deep), so it says which file it is."""
     if os.path.exists(VTCHECK):
-        rc = subprocess.run([sys.executable, VTCHECK, zpath, "--deep"]).returncode
+        rc = subprocess.run([sys.executable, VTCHECK, zpath]).returncode
+        if rc == 1:
+            subprocess.run([sys.executable, VTCHECK, zpath, "--deep"])
     else:
         print(f"NOT CHECKED: {VTCHECK} is missing")
         rc = 2

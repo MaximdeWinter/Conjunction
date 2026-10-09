@@ -20,7 +20,7 @@ makes a folder with a zip to upload. Players install only the quest.
 [**Download Conjunction**](https://github.com/MaximdeWinter/Conjunction/releases/latest): on that page, click
 **Conjunction-<version>-with-radish.zip** under **Assets**. It has the radish modding tools inside.
 
-The green **Code** button and **Source code (zip)** download the source code. They are for developers.
+The green **Code** button downloads the source code (for developers). Conjunction.exe is in the zip under **Releases**.
 
 Conjunction is also on [Nexus Mods](https://www.nexusmods.com/witcher3/mods/13916). The Nexus download needs the
 [radish modding tools](https://www.nexusmods.com/witcher3/mods/3620) zip as well (Manual download). Conjunction finds
@@ -29,9 +29,8 @@ it in your Downloads folder.
 ## Install and first start
 
 1. Install [TW3SE](https://www.nexusmods.com/witcher3/mods/13837).
-2. Right-click the downloaded zip > **Extract All**, and pick a folder of your own (for example
-   `C:\Games\Conjunction`).
-3. Open the folder and start **Conjunction.exe**.
+2. Right-click the downloaded zip > **Extract All**.
+3. Open the new folder and start **Conjunction.exe**. The guide for the first quest is **Guide.pdf** beside it.
 
 Windows may show "Windows protected your PC" at the first start (Conjunction.exe is unsigned). Click
 **More info** > **Run anyway**.
