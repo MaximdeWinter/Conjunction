@@ -19,9 +19,17 @@ makes a folder with a zip to upload. Players install only the quest.
 
 [**Download Conjunction**](https://github.com/MaximdeWinter/Conjunction/releases/latest)
 
-| 1. Click the release under **Releases** (right side) | 2. Install TW3SE first | 3. Click **Conjunction-<version>-with-radish.zip** |
-|:-:|:-:|:-:|
-| <img src="docs/download/1_releases.png" width="170"> | <img src="docs/download/2_install.png" width="320"> | <img src="docs/download/3_zip.png" width="320"> |
+**1.** Click the release under **Releases** (right side)
+
+<img src="docs/download/1_releases.png" width="760">
+
+**2.** Install TW3SE first
+
+<img src="docs/download/2_install.png" width="760">
+
+**3.** Click **Conjunction-<version>-with-radish.zip**
+
+<img src="docs/download/3_zip.png" width="760">
 
 The zip has the radish modding tools inside. The green **Code** button downloads the source code (for developers). Conjunction.exe is in the zip under **Releases**.
 
