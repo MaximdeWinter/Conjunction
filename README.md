@@ -237,6 +237,21 @@ Code written together with Claude Opus 5.5.
 - The quest graph follows the look and the wire router of [PathView](https://github.com/pathsim/pathview) by
   milanofthe (MIT)
 
+Software inside Conjunction:
+
+- [Python](https://www.python.org) (PSF License)
+- [Qt for Python](https://www.qt.io/qt-for-python) (PySide6) and [Qt](https://www.qt.io): The Qt Company (LGPL-3.0)
+- [PyYAML](https://pyyaml.org) (MIT)
+- [Pillow](https://python-pillow.github.io) (MIT-CMU)
+- [cryptography](https://cryptography.io) (Apache-2.0 or BSD-3-Clause), [bcrypt](https://github.com/pyca/bcrypt)
+  (Apache-2.0), [cffi](https://cffi.readthedocs.io) (MIT), [OpenSSL](https://www.openssl.org) (Apache-2.0)
+- [lz4](https://github.com/python-lz4/python-lz4) (BSD-3-Clause)
+- [Lucide](https://lucide.dev) icons (ISC)
+- [PyInstaller](https://pyinstaller.org) builds Conjunction.exe
+
+The full list with all license texts is in
+[third_party/THIRD_PARTY_NOTICES.txt](third_party/THIRD_PARTY_NOTICES.txt).
+
 ## License
 
 You may use Conjunction and change it for your own use. Quests and mods made with it are yours to share. Conjunction
