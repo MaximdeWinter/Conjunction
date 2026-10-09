@@ -1,0 +1,7 @@
+world: velen
+visible: start
+objects:
+- id: elder
+  template: gameplay\community\community_npcs\novigrad\regular\novigrad_citizen_man.w2ent
+  pos: [659.5, 2077.0, 32.704]
+  rot: [0.0, 0.0, 180.0]

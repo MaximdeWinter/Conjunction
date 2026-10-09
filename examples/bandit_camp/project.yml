@@ -1,0 +1,35 @@
+id: banditcamp
+name: The bandit camp
+description: conjunction example - a quest giver, a place, a quest with seven steps
+quest:
+  title: The Bandit Camp
+  type: secondary
+  description: Folk in Novigrad whisper about bandits hiding loot near the harbour. Worth a look.
+  items:
+    savings: {name: The elder's savings, description: A heavy purse - everything the old man had.}
+  steps:
+    - talk:
+        npc: village/elder
+        text: Talk to the worried citizen
+        dialogue:
+          - {who: npc, text: "Witcher! Bandits took my savings - hid them in a strongbox, right by the harbour.",
+             gesture: explain, mood: afraid}
+          - choice:
+              - text: "Show me where."
+                lines:
+                  - {who: npc, text: "Just down there, by the harbour. Please, hurry.", gesture: point}
+                end: continue
+              - text: "Not now."
+                lines:
+                  - {who: npc, text: "Come back soon, Witcher... please.", mood: sad}
+                end: retry
+              - text: "Not my problem."
+                lines:
+                  - {who: npc, text: "Then the gods help me.", gesture: sigh, mood: sad}
+                end: fail
+    - goto: {at: camp/spot1, radius: 6, text: Find the bandit camp}
+    - loot: {object: camp/strongbox, item: "own:savings", text: Take the elder's savings from the strongbox}
+    - show: {place: camp_after}
+    - kill: {target: camp_after/ghoul, text: A ghoul smelled the loot - kill it}
+    - reward: {money: 150, xp: 100, items: [Ruby]}
+    - fact: {name: banditcamp_done, value: 1}

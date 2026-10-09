@@ -1,0 +1,27 @@
+world: velen
+visible: start
+objects:
+- id: leader
+  template: dlc\dlc7\data\characters\sq107_bandit_lvl1_pickaxe.w2ent
+  pos: [672.0, 2088.0, 32.703]
+  rot: [0.0, 0.0, 200.0]
+- id: ilse
+  template: gameplay\community\community_npcs\novigrad\regular\novigrad_citizen_woman.w2ent
+  pos: [674.0, 2090.5, 32.703]
+  rot: [0.0, 0.0, 220.0]
+- template: environment\decorations\decoration_sets\boxes\decoration_set_boxes_chest_a.w2ent
+  pos: [670.0, 2091.0, 32.703]
+  rot: [0.0, 0.0, 15.0]
+- id: blood
+  template: quests\part_2\quest_files\q106_tower\entities\q106_blood_clue.w2ent
+  pos: [668.5, 2084.0, 32.703]
+  rot: [0.0, 0.0, 0.0]
+- id: prints
+  template: quests\part_1\quest_files\q303_treasure\clues\q303_footprints.w2ent
+  pos: [670.0, 2086.0, 32.703]
+  rot: [0.0, 0.0, 40.0]
+- id: spot1
+  template: dlc\bob\data\environment\decorations\gameplay\flags_banners\flag_racing_b.w2ent
+  pos: [672.0, 2087.0, 32.703]
+  rot: [0.0, 0.0, 0.0]
+  marker: true

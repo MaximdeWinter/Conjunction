@@ -1,0 +1,15 @@
+world: velen
+visible: start
+objects:
+- id: strongbox
+  template: gameplay\containers\new_locations\novigrad\indoors\average\old_chest.w2ent
+  pos: [664.0, 2072.0, 32.703]
+  rot: [0.0, 0.0, 30.0]
+- template: environment\decorations\decoration_sets\boxes\decoration_set_boxes_chest_a.w2ent
+  pos: [666.0, 2073.5, 32.703]
+  rot: [0.0, 0.0, 80.0]
+- id: spot1
+  template: dlc\bob\data\environment\decorations\gameplay\flags_banners\flag_racing_b.w2ent
+  pos: [665.0, 2072.5, 32.703]
+  rot: [0.0, 0.0, 0.0]
+  marker: true

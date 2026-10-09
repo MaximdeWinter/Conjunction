@@ -1,0 +1,10 @@
+{
+  "id": "example",
+  "name": "Example",
+  "version": "0.2",
+  "api": 1,
+  "requires": [],
+  "adult": false,
+  "author": "Conjunction",
+  "description": "Shows every hook of the plug-in API."
+}

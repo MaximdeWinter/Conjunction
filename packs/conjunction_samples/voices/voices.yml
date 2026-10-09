@@ -1,0 +1,7 @@
+# one entry per recording: id (unique in the pack), file, what is said, who says it, tags to find it by
+lines:
+  - {id: help_bandits, file: help_bandits.wav, text: "Witcher! Please, bandits took everything I had.", speaker: villager woman, tags: [female, villager, afraid, help, bandits], lang: en}
+  - {id: thank_you, file: thank_you.wav, text: "Thank you, witcher. I will not forget this.", speaker: villager woman, tags: [female, villager, thanks, happy], lang: en}
+  - {id: come_back, file: come_back.wav, text: "Come back when you have the time.", speaker: villager woman, tags: [female, villager, farewell], lang: en}
+  - {id: go_away, file: go_away.wav, text: "Leave me be. I have nothing for you.", speaker: villager woman, tags: [female, villager, angry, refuse], lang: en}
+  - {id: over_here, file: over_here.wav, text: "Over here! Quickly!", speaker: villager woman, tags: [female, villager, call, afraid], lang: en}

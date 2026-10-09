@@ -1,0 +1,10 @@
+world: velen
+visible: step
+objects:
+- template: environment\decorations\decoration_sets\boxes\decoration_set_boxes_chest_a.w2ent
+  pos: [668.0, 2076.0, 32.703]
+  rot: [0.0, 0.0, 10.0]
+- id: ghoul
+  template: characters\npc_entities\monsters\ghoul_lvl1.w2ent
+  pos: [668.0, 2072.0, 32.703]
+  rot: [0.0, 0.0, 200.0]

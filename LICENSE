@@ -1,0 +1,50 @@
+Conjunction License
+
+Copyright (c) 2026 MaximdeWinter. All rights reserved, except for what this license allows.
+
+"Conjunction" means the app, its source code, the Conjunction Runtime and every build of them.
+
+
+You may:
+
+1. Download, install and use Conjunction, for free.
+2. Read the source code, build it and change it for your own use.
+3. Share the quests, places, mods and content packs you make with Conjunction. The scripts and files
+   Conjunction adds to them (for example the quest's script functions and the pack card) may go with them.
+4. Write plug-ins for Conjunction and share them, as long as they hold no code of Conjunction.
+5. Link to Conjunction's official pages (Nexus Mods and GitHub).
+
+
+You may not:
+
+1. Upload or share Conjunction, a changed version of it or a build of it (on mod sites, file hosts, in other
+   repositories or in a pack with other files). The official pages are the only places to download it.
+2. Sell Conjunction or a changed version of it, or charge for access to it.
+3. Hand out Conjunction or a changed version of it as your own work.
+
+A fork on GitHub (GitHub's terms allow it) is for your own changes. It may not publish builds or releases.
+
+
+What you make with Conjunction
+
+Everything you make with Conjunction (quests, places, mods, content packs, plug-ins, exports) is the property of its
+creator. The creator decides what happens with it and is responsible for its content. MaximdeWinter takes no
+responsibility for content made with Conjunction.
+
+A credit is welcome ("Made with Conjunction" with a link to its page). It is not required.
+
+
+Third-party parts
+
+Conjunction contains software of other authors (Python, Qt for Python, PyYAML, Pillow, cryptography, lz4 and more).
+These parts stay under their own licenses, listed in THIRD_PARTY_NOTICES.txt and the licenses folder. Where one of them gives you more rights (for example to replace the Qt libraries), those
+rights apply to that part.
+
+
+No warranty
+
+Conjunction comes as it is, without any warranty. MaximdeWinter is not liable for any damage from its use, as far as
+the law allows.
+
+
+Questions and permissions beyond this license: the Conjunction page on Nexus Mods.

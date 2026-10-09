@@ -1,0 +1,260 @@
+id: thechoice
+name: The choice
+description: conjunction example - a decision in a dialogue splits the quest into
+  two paths
+quest:
+  title: A Daughter for a Price
+  type: secondary
+  description: A father in Novigrad begs for help - bandits took his daughter.
+  keep_alive:
+  - hideout/ilse
+  outcomes:
+    fight: Save Ilse
+    freed: Ilse walks free
+    ransom: Take the ransom
+  nodes:
+    start:
+      step:
+        start: {}
+      x: 0
+      y: 0
+    n1:
+      step:
+        talk:
+          npc: village/father
+          text: Talk to the desperate father
+          start: calls
+          call:
+          - who: npc
+            text: Witcher! Please, wait!
+          dialogue:
+          - who: npc
+            text: Witcher! They took my Ilse - bandits, down by the old warehouse.
+              Please!
+            gesture: explain
+            mood: afraid
+          - choice:
+            - text: I'll find her.
+              lines:
+              - who: npc
+                text: Gods bless you, witcher!
+                gesture: bow
+              end: continue
+            - text: Not now.
+              end: retry
+      x: 0
+      y: 100
+    n2:
+      step:
+        goto:
+          at: hideout/spot1
+          radius: 12
+          map_radius: 20
+          text: Find the bandits' hideout
+      x: 0
+      y: 240
+    n3:
+      step:
+        clues:
+          in_order: true
+          text: Look for signs of Ilse with your witcher senses
+          clues:
+          - object: hideout/blood
+            says:
+              text: Blood... Fresh.
+              voice: 1056108
+              dur: 1.64
+          - object: hideout/prints
+            says:
+              text: Footprints... human...
+              voice: 579559
+              dur: 2.252
+      x: 0
+      y: 340
+    n4:
+      step:
+        talk:
+          npc: hideout/leader
+          text: Talk to the bandit leader
+          start: near
+          radius: 7
+          with:
+          - who: hideout/ilse
+            joins: start
+          dialogue:
+          - who: npc
+            text: Another hero. Turn around, witcher.
+            mood: contempt
+          - choice:
+            - text: Let the girl go.
+              lines:
+              - who: npc
+                text: Make me.
+                gesture: stop
+                mood: aggressive
+              end: path:fight
+            - text: You will let her go.
+              axii: true
+              once: true
+              lines:
+              - who: npc
+                text: I... will let her go.
+                mood: neutral
+              end: path:freed
+            - text: Here - 200 crowns. Let her go.
+              pay: 200
+              lines:
+              - who: npc
+                text: Pleasure doing business, witcher.
+                gesture: agree
+              end: path:freed
+            - text: What's in it for me?
+              lines:
+              - who: npc
+                text: Her father pays well. Half is yours - if you walk away.
+                gesture: explain
+              - choice:
+                - text: Deal.
+                  lines:
+                  - who: hideout/ilse
+                    text: No! Please, don't leave me here!
+                    mood: very_afraid
+                  end: path:ransom
+                - text: No deal.
+                  end: path:fight
+      x: 0
+      y: 460
+    n5:
+      step:
+        hostile:
+          target: hideout/leader
+      x: 320
+      y: 610
+      remember: fight
+    n6:
+      step:
+        kill:
+          target: hideout/leader
+          text: Kill the bandit leader
+      x: 320
+      y: 710
+    n7:
+      step:
+        talk:
+          npc: hideout/ilse
+          text: Talk to Ilse
+          dialogue:
+          - who: npc
+            text: You came for me... Thank you, witcher!
+            mood: happy
+      x: 320
+      y: 810
+    n8:
+      step:
+        reward:
+          money: 150
+          xp: 120
+      x: 320
+      y: 910
+    done:
+      step:
+        end:
+          how: success
+      x: 30
+      y: 1350
+    n9:
+      step:
+        talk:
+          npc: hideout/ilse
+          text: Talk to Ilse
+          dialogue:
+          - who: npc
+            text: You got me out without a fight... Thank you!
+            mood: happy
+      x: 320
+      y: 1130
+      remember: freed
+    n10:
+      step:
+        reward:
+          xp: 150
+      x: 320
+      y: 1230
+    n11:
+      step:
+        note:
+          text: Geralt took the bandits' offer and left the girl behind.
+      x: 320
+      y: 1450
+      remember: ransom
+    n12:
+      step:
+        goto:
+          at: hideout/spot1
+          radius: 10
+          when: night
+          stay: true
+          text: Wait at the hideout for your share - they pay at nightfall
+      x: 320
+      y: 1550
+    n13:
+      step:
+        reward:
+          money: 300
+          xp: 50
+      x: 320
+      y: 1670
+  links:
+  - - n1
+    - continue
+    - n2
+  - - n1
+    - retry
+    - n1
+  - - n2
+    - next
+    - n3
+  - - n3
+    - next
+    - n4
+  - - n5
+    - next
+    - n6
+  - - n6
+    - next
+    - n7
+  - - n7
+    - next
+    - n8
+  - - n8
+    - next
+    - done
+  - - n4
+    - path_fight
+    - n5
+  - - n9
+    - next
+    - n10
+  - - n10
+    - next
+    - done
+  - - n4
+    - path_freed
+    - n9
+  - - n11
+    - next
+    - n12
+  - - n12
+    - arrived
+    - n13
+  - - n13
+    - next
+    - done
+  - - n4
+    - path_ransom
+    - n11
+  - - start
+    - next
+    - n1
+run: 1
+live_from: 1

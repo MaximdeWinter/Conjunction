@@ -1,0 +1,24 @@
+Conjunction - third-party software
+
+Conjunction.exe is built with PyInstaller and brings the software below in its _internal folder. The full license
+texts are in the licenses folder beside this file.
+
+Qt for Python (PySide6, shiboken6) 6.11.2 and Qt 6 - The Qt Company Ltd. - LGPL-3.0 (licenses/LGPL-3.0.txt, which
+  builds on licenses/GPL-3.0.txt). The Qt libraries are the separate files in _internal/PySide6 and
+  _internal/shiboken6; you can replace them with your own build of the same version. Source code:
+  https://code.qt.io and https://download.qt.io/official_releases/QtForPython/
+Python 3.14 - Python Software Foundation - PSF License (licenses/Python.txt, with the terms of the libraries in
+  Python's Windows build: bzip2, libffi, Zstandard and others)
+OpenSSL 3 - The OpenSSL Project - Apache-2.0 (licenses/Apache-2.0.txt)
+SQLite - public domain
+PyYAML 6.0.3 - Kirill Simonov, Ingy dot Net - MIT (licenses/PyYAML.txt)
+Pillow 12.2.0 - Jeffrey A. Clark and contributors - MIT-CMU (licenses/Pillow.txt)
+cryptography 49.0.0 - The cryptography developers - Apache-2.0 or BSD-3-Clause (licenses/cryptography.txt,
+  licenses/Apache-2.0.txt, licenses/cryptography-BSD.txt)
+bcrypt 5.0.0 - The Python Cryptographic Authority - Apache-2.0 (licenses/bcrypt.txt)
+lz4 4.4.5 - Jonathan Underwood and contributors - BSD-3-Clause (licenses/lz4.txt)
+cffi 2.0.0 - Armin Rigo, Maciej Fijalkowski - MIT (licenses/cffi.txt)
+Microsoft Visual C++ Runtime (VCRUNTIME140, ucrtbase, api-ms-win-*) - Microsoft - redistributed under the terms of
+  the Visual C++ Redistributable
+Lucide icons - Lucide Contributors - ISC (licenses/Lucide.txt)
+The quest graph follows the look and the wire router of PathView - PathSim - MIT (licenses/PathView.txt)
