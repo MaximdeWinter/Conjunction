@@ -232,7 +232,7 @@ Made by MaximdeWinter: idea, design, testing in the game and direction.
 
 Code written together with Claude Opus 5.5.
 
-- radish modding tools: rmemr
+- [radish modding tools](https://www.nexusmods.com/witcher3/mods/3620): rmemr
 - The Witcher 3 REDkit / wcc_lite: CD PROJEKT RED
 - The quest graph follows the look and the wire router of [PathView](https://github.com/pathsim/pathview) by
   milanofthe (MIT)
