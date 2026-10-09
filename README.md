@@ -21,7 +21,7 @@ makes a folder with a zip to upload. Players install only the quest.
 
 **1.** Click the release under **Releases** (right side)
 
-<img src="docs/download/1_releases.png" width="760">
+<img src="docs/download/1_repo_page.png" width="760">
 
 **2.** Install TW3SE first
 
