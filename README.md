@@ -210,6 +210,23 @@ it can sign as you. You can have several profiles, each with its own key.
 - **Public timestamp** (Settings > Profile, off by default): the export registers the history with the OpenTimestamps
   calendars and puts the proof into the quest file. It proves when your quest existed (opentimestamps.org).
 
+## AI agent interface
+
+While the editor runs, other programs on your PC can control Conjunction through a local interface (127.0.0.1, port
+37110). It is made for AI agents and scripts: a coding assistant on your PC can build and test a quest for you.
+
+Through it, a program can:
+
+- read Conjunction's windows, click and type in them
+- take screenshots of Conjunction, the game or the whole screen
+- read and change the open quest and its places, build it, Build & Play
+- send commands to the game, press keys and move the mouse in it
+- run Python code inside Conjunction
+
+Conjunction has no AI of its own and sends nothing to an AI service. The interface takes connections from your PC only
+and does something only when a program connects to it. Any program running on your PC can use it while the editor
+runs.
+
 ## Folders
 
 Everything Conjunction keeps is in **Documents\Conjunction**:
