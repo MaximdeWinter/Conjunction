@@ -227,6 +227,10 @@ Conjunction has no AI of its own and sends nothing to an AI service. The interfa
 and does something only when a program connects to it. Any program running on your PC can use it while the editor
 runs.
 
+Please write the dialogues of your quests yourself. Players come for the story and the characters, and the words
+should be yours. Use an AI agent to build places and to turn a quest you planned (its steps, choices and endings)
+into the graph.
+
 ## Folders
 
 Everything Conjunction keeps is in **Documents\Conjunction**:
