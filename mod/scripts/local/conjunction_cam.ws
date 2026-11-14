@@ -3,7 +3,7 @@
 // CHANGED.
 //
 // The camera is a real camera entity (CStaticCamera, the one the game uses for posters), not the engine's debug free
-// camera: Maxim compared both in the game - the entity is "the perfect one" (the debug free camera throws away the
+// camera: MaximdeWinter compared both in the game - the entity is "the perfect one" (the debug free camera throws away the
 // TAA / DLSS history on every move, the picture shimmered; called every frame even at rest: 60 % of the image changed,
 // 15 % on changes only, 11 % with the gameplay camera). The debug free camera is only a fallback if the entity cannot
 // be made. Keep both rules: entity camera, and move it only when the pose changed.
@@ -13,7 +13,7 @@
 // EnableFreeCamera(false) puts the game's input back to gameplay (Geralt walks with WASD, right click = witcher
 // senses, no cursor) - it is only called when the free camera really was on.
 // Input older than 0.25 s counts as released: a companion app that died cannot leave a key stuck. Every new pose is
-// reported (cam|...), the app draws the gizmo with it (in its overlay: Maxim 29.09. - the overlay is the simpler way;
+// reported (cam|...), the app draws the gizmo with it (in its overlay: MaximdeWinter 29.09. - the overlay is the simpler way;
 // a gizmo lagging a little while flying does not matter, it is only used while the camera stands still).
 
 @addField(CR4Player)
@@ -28,6 +28,10 @@ var w3sFlyGoal : EulerAngles;   // where the mouse turned the camera to: w3sFlyR
 var w3sFlyIn : Vector;          // x = forward, y = right, z = up (-1..1); W = speed factor
 @addField(CR4Player)
 var w3sFlyInTime : float;
+@addField(CR4Player)
+var w3sFlyInAge : float;        // seconds since the last input
+@addField(CR4Player)
+var w3sFlyPaused : bool;        // the editor's Pause: the game's time stands, the editor steps the camera (cj_cam_step)
 @addField(CR4Player)
 var w3sFlyLast : Vector;        // the pose last given to the camera
 @addField(CR4Player)
@@ -69,6 +73,20 @@ function CjFlyEntityPos() : Vector {
     return p;
 }
 
+// the camera's near plane at 5 cm (the poster camera takes the environment's, about 40 cm: MaximdeWinter 27.10. looked into
+// a woman long before he touched her) - the cutscenes' closest one
+@addMethod(CR4Player)
+function CjFlyNear() {
+    var cc : CCameraComponent;
+    if (!w3sFlyCam) {
+        return;
+    }
+    cc = (CCameraComponent)w3sFlyCam.GetComponentByClassName('CCameraComponent');
+    if (cc) {
+        cc.nearPlane = NP_VeryClose5cm;
+    }
+}
+
 @addMethod(CR4Player)
 function CjFlyStart() {
     var tmpl : CEntityTemplate;
@@ -97,6 +115,7 @@ function CjFlyStart() {
         w3sFlyCam.fadeStartDuration = 0;
         w3sFlyCam.fadeEndDuration = 0;
         w3sFlyCam.SetFov(fov);
+        CjFlyNear();
         w3sFlyCam.Run();
     } else {
         CjOut("camera fallback: no camera entity, debug free camera");
@@ -113,6 +132,8 @@ function CjFlyStart() {
 @addMethod(CR4Player)
 function CjFlyStop() {
     RemoveTimer('CjFlyTick');
+    theGame.RemoveTimeScale('CjPause');            // playing: the world runs again
+    w3sFlyPaused = false;
     if (w3sFlyAway) {
         BreakAttachment();
         TeleportWithRotation(w3sFlyHome, w3sFlyHomeRot);
@@ -135,7 +156,7 @@ function CjFlyStop() {
 @addMethod(CR4Player)
 function CjFlyInput(fwd : float, right : float, up : float, fast : float, dyaw : float, dpitch : float) {
     w3sFlyIn = Vector(fwd, right, up, fast);
-    w3sFlyInTime = EngineTimeToFloat(theGame.GetEngineTime());
+    w3sFlyInAge = 0;
     // only the goal: the mouse's steps come in the app's rhythm, not the game's frames - turned at once they came
     // two in one frame and none in the next (06.10.: micro stutter while looking); the tick glides there
     w3sFlyGoal.Yaw = AngleNormalize(w3sFlyGoal.Yaw - dyaw);
@@ -152,13 +173,12 @@ function CjFlyAxes(out f : Vector, out r : Vector, out u : Vector) {
 
 @addMethod(CR4Player)
 timer function CjFlyTick(dt : float, id : int) {
-    var f, r, u, move : Vector;
-    var k, d : float;
     // the game must never pause in the editor: losing the focus (to the editor's panel) makes it open its pause
     // menu, which the NG scripts skip while this fact is set (as for timed dialogue choices). Renewed every frame
     // with a short life: a save made while editing cannot keep the pause menu off.
     FactsSet("nge_pause_menu_disabled", 1, 10);
     CjFreezeDue();
+    CjRenewDue();
     CjGhostDue();
     if (w3sFlyAway) {                               // whatever started a line of his while he rides along: cut
         StopAllVoicesets(false);
@@ -168,7 +188,19 @@ timer function CjFlyTick(dt : float, id : int) {
         CjOut("context|" + NameToString(theInput.GetContext()));
         theInput.SetContext('EMPTY_CONTEXT');
     }
-    if (EngineTimeToFloat(theGame.GetEngineTime()) - w3sFlyInTime > 0.25) {
+    if (!w3sFlyPaused) {
+        CjFlyStep(MinF(dt, 0.1));
+    }
+}
+
+// one frame of the camera: dt from the timer, or, while paused, the editor's real time (cj_cam_step: the game's time
+// stands still then, its timers with it - 27.10.: the camera did not move)
+@addMethod(CR4Player)
+function CjFlyStep(dt : float) {
+    var f, r, u, move : Vector;
+    var k, d : float;
+    w3sFlyInAge += dt;
+    if (w3sFlyInAge > 0.25) {
         w3sFlyIn = Vector(0, 0, 0, 1);
     }
     // the view glides to where the mouse turned it (about 90 % in 80 ms): smooth whatever rhythm the input has
@@ -252,6 +284,17 @@ function CjFlyFollow() {
     CreateAttachment(w3sFlyCam, '', Vector(0, 0, -1.5));
 }
 
+// the edge of the playable area while he rides along: the game would black the screen out and put him back inside,
+// the camera carries him out again at once - a black flash over and over (MaximdeWinter 18.10., far out in Kaer Morhen).
+// The camera may go anywhere; once editing is over he is put back home (CjFlyStop), inside
+@wrapMethod(CR4Player)
+function OnStartTeleportingPlayerToPlayableArea() {
+    if (w3sFlyAway) {
+        return;
+    }
+    wrappedMethod();
+}
+
 exec function cj_cam(fwd : float, right : float, up : float, fast : float, dyaw : float, dpitch : float) {
     if (thePlayer.w3sFlyOn) {
         thePlayer.CjFlyInput(fwd, right, up, fast, dyaw, dpitch);
@@ -267,6 +310,33 @@ exec function cj_sound_resume() {
 // the suite's 'Sound: off', or another program in front: the game's sound paused (the pause menu's event)
 exec function cj_sound_pause() {
     theSound.SoundEvent("system_pause");
+}
+
+// the editor's Pause: the world stands (people, animals, leaves, the clock; the game's own way to stop the world, as
+// its fight tutorial does it), the camera flies on in real time (cj_cam_step). Not saved; playing ends it (CjFlyStop)
+exec function cj_pause(on : bool) {
+    thePlayer.CjFlyPause(on);
+}
+
+@addMethod(CR4Player)
+function CjFlyPause(on : bool) {
+    w3sFlyPaused = on && w3sFlyOn;
+    if (w3sFlyPaused) {
+        theGame.SetTimeScale(0.001, 'CjPause', 1000, false, true);
+    } else {
+        theGame.RemoveTimeScale('CjPause');
+    }
+}
+
+// while paused: one frame of the camera, dt = the editor's real seconds since the last
+exec function cj_cam_step(dt : float) {
+    if (thePlayer.w3sFlyOn && thePlayer.w3sFlyPaused) {
+        thePlayer.CjFlyStep(MinF(dt, 0.1));
+    }
+}
+
+exec function cj_cam_near() {
+    thePlayer.CjFlyNear();
 }
 
 exec function cj_cam_sync() {

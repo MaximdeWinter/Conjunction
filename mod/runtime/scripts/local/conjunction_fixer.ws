@@ -1,11 +1,11 @@
-// The fixer (Maxim 06.10.: the runtime stays in the game and puts right what a removed quest left). A quest made
+// The fixer (MaximdeWinter 06.10.: the runtime stays in the game and puts right what a removed quest left). A quest made
 // with Conjunction that changes the game's own world - hides one of its people, switches off an encounter, makes
 // someone hostile, locks a door or a chest - does it through the *Q functions below, which note the change in the
 // save with the quest's id. The quest taking its change back takes the note too. Every five seconds a note whose
 // quest's DLC is no longer in the game is undone, as soon as its object is near (a person far away: when the player
 // comes near). The quest's own things (their tags carry its id) are not noted: they go with its DLC.
 //
-// 08.10. (Maxim: every quest runs without the runtime, the runtime puts things right): a quest carries its own copy
+// 08.10. (MaximdeWinter: every quest runs without the runtime, the runtime puts things right): a quest carries its own copy
 // of the functions it calls (scriptlib.py), so a note has to live where a quest can write it and the runtime can
 // read it - the facts of the save. A note is text ("<quest id>|<kind>|<tag>"), one fact per letter:
 // cjfixn_<slot>_<letter> = the letter's place in CJFIX_LETTERS, cjfixn_count = the slots in use. A script makes no

@@ -2,7 +2,7 @@
 
 Every child process of Conjunction starts without a console window of its own (CREATE_NO_WINDOW). A suite that has no
 console itself (started detached) would otherwise open a terminal for each console program it runs - 01.10.: the
-background suite asked tasklist several times a second, each time a window came up and took Maxim's focus.
+background suite asked tasklist several times a second, each time a window came up and took MaximdeWinter's focus.
 """
 __version__ = "0.1.0"
 APP_NAME = "Conjunction"        # what people see (titles, pages, the exe); the package and its folders stay conjunction
@@ -22,7 +22,7 @@ if _sys.platform == "win32" and not getattr(_subprocess.Popen, "_cj_no_window", 
     _subprocess.Popen.__init__ = _init
     _subprocess.Popen._cj_no_window = True
 
-# YAML read by libyaml where it is there (02.10.: Maxim's 112 project files - 1.7 s in Python, 0.15 s in libyaml, the
+# YAML read by libyaml where it is there (02.10.: MaximdeWinter's 112 project files - 1.7 s in Python, 0.15 s in libyaml, the
 # same data): every yaml.safe_load of Conjunction (projects, places, plugins) goes through it
 try:
     import yaml as _yaml

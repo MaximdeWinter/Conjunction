@@ -1,0 +1,28 @@
+-- trails.LIBRARY (conjunction/trails.py): the tracks Find clues offers - {key, label, group, templates, step}.
+-- Made by ingame/tools/make_data.py; not by hand.
+return {
+  {"boots", "Boot prints", "People", {"quests\\minor_quests\\prologue_village\\quest_files\\mq0005_dwarfsmith\\clues\\mq0005_bootprints.w2ent"}, 1.4},
+  {"footprints", "Footprints", "People", {"quests\\part_1\\quest_files\\q202_giant\\entities\\q202_focus_footprints_left.w2ent", "quests\\part_1\\quest_files\\q202_giant\\entities\\q202_focus_footprints_right.w2ent"}, 0.75},
+  {"bare_feet", "Bare feet", "People", {"dlc\\ep1\\data\\quests\\quest_files\\mq6004_broken_rose\\entities\\clues\\mq6004_bare_footprints.w2ent"}, 1.4},
+  {"armored", "Soldiers' boots", "People", {"dlc\\ep1\\data\\quests\\quest_files\\mq6004_broken_rose\\entities\\clues\\mq6004_armored_footprints.w2ent"}, 1.4},
+  {"children", "Child's footprints", "People", {"quests\\part_1\\quest_files\\q105_witches\\entities\\q105_children_footprints.w2ent"}, 1.0},
+  {"horse", "Hoofprints", "Animals", {"dlc\\ep1\\data\\quests\\quest_files\\mq6004_broken_rose\\entities\\clues\\mq6004_horseprints.w2ent"}, 2.0},
+  {"wolf", "Wolf tracks", "Animals", {"quests\\part_1\\quest_files\\q205_frozen_coast\\entities\\q205_focus_wolfprints.w2ent"}, 1.2},
+  {"dog", "Dog tracks", "Animals", {"quests\\minor_quests\\prologue_village\\quest_files\\mq0001_missing_brother\\clues\\mq0001_dog_track.w2ent"}, 1.0},
+  {"goat", "Goat tracks", "Animals", {"quests\\part_1\\quest_files\\q103_daughter\\entities\\q103_goat_track.w2ent"}, 1.0},
+  {"boar", "Boar tracks", "Animals", {"dlc\\ep1\\data\\quests\\quest_files\\q603_bank\\entities\\q603_clue_boar_tracks.w2ent"}, 1.2},
+  {"nekker", "Nekker tracks", "Monsters", {"quests\\generic_quests\\skellige\\quest_files\\mh202_nekker_warrior\\entities\\mh202_nekker_tracks.w2ent"}, 1.2},
+  {"troll", "Troll tracks", "Monsters", {"dlc\\dlc3\\data\\entities\\mh201_troll_tracks.w2ent"}, 2.2},
+  {"giant", "Giant's footprints", "Monsters", {"quests\\part_1\\quest_files\\q202_giant\\entities\\q202_focus_footprints_giant_left.w2ent"}, 3.0},
+  {"cockatrice", "Cockatrice tracks", "Monsters", {"quests\\generic_quests\\no_mans_land\\quest_files\\mh101_cockatrice\\entities\\mh101_cockatrice_tracks.w2ent"}, 1.5},
+  {"arachas", "Arachas tracks", "Monsters", {"quests\\generic_quests\\no_mans_land\\quest_files\\mh102_arachas\\entities\\mh102_arachas_tracks.w2ent"}, 2.0},
+  {"leshen", "Leshen footprints", "Monsters", {"quests\\sidequests\\skellige\\quest_files\\sq204_forest_spirit\\entities\\sq204_leshy_footprints.w2ent", "quests\\sidequests\\skellige\\quest_files\\sq204_forest_spirit\\entities\\sq204_leshy_footprints_r.w2ent"}, 1.8},
+  {"fiend", "Fiend tracks", "Monsters", {"quests\\generic_quests\\skellige\\quest_files\\mh206_fiend_ruins\\entities\\mh206_fiend_tracks_single_back.w2ent"}, 2.5},
+  {"forktail", "Forktail tracks", "Monsters", {"quests\\part_1\\quest_files\\q401_konsylium\\clues\\q401_forktail_track.w2ent"}, 2.0},
+  {"blood_drops", "Blood drops", "Blood and marks", {"quests\\generic_quests\\no_mans_land\\quest_files\\mh101_cockatrice\\entities\\mh101_blood_trace.w2ent"}, 1.6},
+  {"blood_trail", "Blood trail", "Blood and marks", {"quests\\minor_quests\\prologue_village\\quest_files\\mq0005_dwarfsmith\\clues\\mq0005_blood_trail.w2ent"}, 1.8},
+  {"blood_splat", "Blood splats", "Blood and marks", {"gameplay\\focus_mode_clues\\generic_clues_traces\\generic_clue_blood_splat.w2ent"}, 2.5},
+  {"drag", "Drag marks", "Blood and marks", {"quests\\part_1\\quest_files\\q202_giant\\entities\\q202_focus_dragmarks.w2ent"}, 2.0},
+  {"blood_drag", "Bloody drag marks", "Blood and marks", {"quests\\part_1\\quest_files\\q202_giant\\entities\\q202_focus_blood_drag_big.w2ent"}, 2.5},
+  {"cart", "Cart tracks", "Blood and marks", {"dlc\\bob\\data\\quests\\main_quests\\quest_files\\q701_wine_festival\\entities\\q701_victim_cart_tracks.w2ent"}, 3.0},
+}

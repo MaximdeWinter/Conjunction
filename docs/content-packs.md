@@ -2,16 +2,13 @@
 
 A content pack brings things that quests can use. There are two kinds:
 
-- **Mods with things for the world** (furniture, decorations, items, armour, NPCs): any mod becomes a content pack
-  with a pack card Conjunction writes into it, see [content-creators.md](content-creators.md). Quests that use its
-  things name it, and players who lack it are told what is missing and where to get it.
-- **Voice packs**: recordings for dialogues, described below. A quest carries the recordings it uses in its own mod,
-  so players get them with the quest.
+- **Mods with things for the world** (furniture, decorations, items, armour, NPCs), with a pack card, see
+  [content-creators.md](content-creators.md).
+- **Voice packs**: recordings for dialogues. A quest carries the recordings it uses, so players get them with it.
 
 ## Where voice packs are loaded from
 
-- `packs\` in Conjunction's program folder (the samples it comes with)
-- `Documents\Conjunction\packs\`
+`Documents\conjunction\packs\`, one folder per pack.
 
 ## A voice pack
 
@@ -46,16 +43,14 @@ lines:
     lang: en
 ```
 
-Recordings: wav (8, 16, 24 or 32 bit, float, any rate, mono or stereo); ogg, mp3 and flac when ffmpeg is installed.
-The build adds a little silence at the start.
+Recordings: wav (8, 16, 24 or 32 bit, float, any rate, mono or stereo); ogg, mp3 and flac with ffmpeg.
+
+A quest with recordings needs [ffmpeg](https://ffmpeg.org) on your PC (its folder in the PATH) when you build it.
 
 ## In a dialogue
 
-A line's speech mark > **Find another** opens the voice search. **Custom** lists the recordings of every loaded pack,
-with their words, speaker and tags (a left click on a tag shows only it, a right click adds it to the search).
-**Play** listens to one; a click on its text gives it to the line, and the line then says that text.
+**Voice** under a line opens the voice search. **Game** lists the game's spoken lines with the line's words, voices
+that fit the person first. **Custom** lists the recordings of every loaded pack (a left click on a tag shows only it,
+a right click adds it to the search). **Play** listens to one; a click on its text gives it to the line.
 
-## In the build
-
-A quest that uses recordings carries them in its own mod: each becomes the game's audio, the lip sync is made from the
-recording and its text, and the lines play in every language of the game.
+The build makes the game's audio and the lip sync from each recording, in every language of the game.

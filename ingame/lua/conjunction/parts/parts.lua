@@ -1,0 +1,21 @@
+-- made by ingame/tools/make_parts.py: {indicator x, y, w, h, text x, widget w, widget h} of a part
+return {
+  radio_off = {0, 1, 14, 14, 22, 28, 17},
+  radio_off_hover = {0, 1, 14, 14, 22, 28, 17},
+  radio_on = {0, 0, 18, 18, 26, 32, 18},
+  radio_on_hover = {0, 0, 18, 18, 26, 32, 18},
+  branch_closed = {0, 0, 30, 25, 30, 30, 25},
+  branch_open = {0, 0, 30, 25, 30, 30, 25},
+  panel_branch_closed = {0, 0, 14, 25, 14, 14, 25},
+  panel_branch_open = {0, 0, 14, 25, 14, 14, 25},
+  cat_branch_closed = {0, 0, 12, 22, 12, 12, 22},
+  cat_branch_open = {0, 0, 12, 22, 12, 12, 22},
+  pal_branch_closed = {0, 0, 12, 22, 12, 12, 22},
+  pal_branch_open = {0, 0, 12, 22, 12, 12, 22},
+  vg_branch_closed = {0, 0, 30, 24, 30, 30, 24},
+  vg_branch_open = {0, 0, 30, 24, 30, 30, 24},
+  header_sort = {-4, 1, 6, 4, 30, 200, 30},
+  header_sort_up = {-4, 1, 6, 4, 30, 200, 30},
+  lineedit_clear = {26, 6, 22, 18, 0, 300, 31},
+  tabbar_base = {0, 0, 64, 29, 0, 64, 29},
+}

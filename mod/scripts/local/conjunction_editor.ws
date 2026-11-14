@@ -12,7 +12,7 @@ class CjEditor {
     var placed : array<CEntity>;
     var templates : array<string>;      // template of placed[i]
     var homes : array<Vector>;          // placed[i] where the project has it (the game's push or walk while
-    var homeRots : array<EulerAngles>;  // playing does not count - Maxim 08.10.: NPCs placed on one spot)
+    var homeRots : array<EulerAngles>;  // playing does not count - MaximdeWinter 08.10.: NPCs placed on one spot)
     var selected : CEntity;
     var fovVertical : bool;
     var place : string;
@@ -31,6 +31,9 @@ class CjEditor {
     var freezeAt : array<float>;
     var editExisting : bool;            // select and edit entities already in the world, not only our placed ones
     var hiddenWorld : array<CEntity>;   // objects of the game removed while editing (hidden: they can come back)
+    var looks : array<string>;          // placed[i]'s look as cj_appearance gave it ("": its own)
+    var renew : array<CEntity>;         // placed things moved: made anew where they stand once still (CjRenewDue)
+    var renewAt : array<float>;
     var reportSet : bool;               // the next report says this transform: a teleport takes effect next frame
     var reportAt : Vector;              // (an object the game placed still reads where it was - measured 04.10.)
     var reportRot : EulerAngles;
@@ -266,16 +269,47 @@ function CjRay(sx : float, sy : float, aspect : float, out origin : Vector, out 
     dir = VecNormalize(f + r * ((2 * sx - 1) * th) + u * ((1 - 2 * sy) * tv));
 }
 
-// first hit along a line that is neither skipA nor skipB (the preview, the object being moved)
+// how far along the line from start (dir normalized) it leaves the box, 0 if it does not cross it
+function CjBoxExit(start : Vector, dir : Vector, box : Box) : float {
+    var t, a, b, lo, hi, s, d : float;
+    var k : int;
+    t = 1000000;
+    for (k = 0; k < 3; k += 1) {
+        if (k == 0) { s = start.X; d = dir.X; lo = box.Min.X; hi = box.Max.X; }
+        else if (k == 1) { s = start.Y; d = dir.Y; lo = box.Min.Y; hi = box.Max.Y; }
+        else { s = start.Z; d = dir.Z; lo = box.Min.Z; hi = box.Max.Z; }
+        if (AbsF(d) > 0.0001) {
+            a = (lo - s) / d;
+            b = (hi - s) / d;
+            t = MinF(t, MaxF(a, b));
+        } else if (s < lo || s > hi) {
+            return 0;
+        }
+    }
+    return MaxF(t, 0);
+}
+
+// first hit along a line that is neither skipA nor skipB (the preview, the object being moved). A skipped one hit:
+// on from just inside where the line leaves its bounding box (23.10.: in 5 cm steps a 5.5 m flag pole was never
+// passed - the trace gave up and the flag floated on the navmesh)
 function CjTraceLine(from : Vector, to : Vector, skipA : CEntity, skipB : CEntity, out hit : Vector,
                       out hitEntity : CEntity) : bool {
-    var normal, dir, start : Vector;
+    var passed : CEntity;
+    return CjTraceLinePassed(from, to, skipA, skipB, hit, hitEntity, passed);
+}
+
+// the same; passed: the skipped one the line went through (NULL: none)
+function CjTraceLinePassed(from : Vector, to : Vector, skipA : CEntity, skipB : CEntity, out hit : Vector,
+                           out hitEntity : CEntity, out passed : CEntity) : bool {
+    var normal, dir, start, back : Vector;
     var material : name;
     var comp : CComponent;
+    var backEnt : CEntity;
     var i : int;
     dir = VecNormalize(to - from);
     start = from;
-    for (i = 0; i < 6; i += 1) {
+    passed = NULL;
+    for (i = 0; i < 30; i += 1) {         // (a moved thing's old collision lies outside its box: 5 cm steps)
         if (!theGame.GetWorld().StaticTraceWithAdditionalInfo(start, to, hit, normal, material, comp)) {
             return false;
         }
@@ -286,34 +320,112 @@ function CjTraceLine(from : Vector, to : Vector, skipA : CEntity, skipB : CEntit
         if (!hitEntity || (hitEntity != skipA && hitEntity != skipB)) {
             return true;
         }
-        start = hit + dir * 0.05;
+        passed = hitEntity;
+        if (CjSkip(hitEntity, hit, dir, start, back, backEnt) && backEnt != skipA && backEnt != skipB) {
+            hit = back;
+            hitEntity = backEnt;
+            return true;
+        }
+        if (VecDot(to - start, dir) <= 0) {
+            return false;
+        }
     }
     return false;
 }
 
-// the highest surface below p (above p + up): what a straight trace hits (objects, mostly), the physics' ground
-// (PhysicsCorrectZ) and the walkable ground (NavigationComputeZ) - 06.10.: a trace down alone found the objects but
-// not the ground, Drop did nothing over plain ground
+// where a line that hit e at hit goes on: from just inside where it leaves e's bounding box, at least 5 cm on
+function CjPast(e : CEntity, hit : Vector, dir : Vector) : Vector {
+    var box : Box;
+    var p : Vector;
+    e.CalcBoundingBox(box);
+    p = hit + dir * MaxF(CjBoxExit(hit, dir, box) - 0.02, 0.05);
+    p.W = 1;
+    return p;
+}
+
+// a line that hit e (to be passed) at hit goes on at onward (CjPast). Something else inside e's box on the way (the
+// ground under a sunk or tilted object) would be passed with it: a trace back from onward finds it -> true, there
+function CjSkip(e : CEntity, hit : Vector, dir : Vector, out onward : Vector, out back : Vector,
+                out backEnt : CEntity) : bool {
+    var normal, to : Vector;
+    var material : name;
+    var comp : CComponent;
+    onward = CjPast(e, hit, dir);
+    backEnt = NULL;
+    if (VecDistance(onward, hit) < 0.06) {
+        return false;
+    }
+    to = hit + dir * 0.01;
+    to.W = 1;
+    if (!theGame.GetWorld().StaticTraceWithAdditionalInfo(onward, to, back, normal, material, comp)) {
+        return false;
+    }
+    if (comp) {
+        backEnt = comp.GetEntity();
+    }
+    return backEnt != e;
+}
+
+// the highest surface below p (above p + up): what a straight trace hits (objects, the ground) and the physics'
+// ground (PhysicsCorrectZ) - 06.10.: a trace down alone found the objects but not the ground, Drop did nothing over
+// plain ground. The walkable ground (NavigationComputeZ) only when neither found anything: the navmesh lies up to 30 cm
+// above the real ground (measured 23.10. at the camp: ground 32.70, navmesh 32.99) - everything moved floated on it
 function CjSurfaceBelow(p : Vector, up : float, skipA : CEntity, skipB : CEntity, out z : float) : bool {
-    var hit : Vector;
-    var ent : CEntity;
-    var gz : float;
+    var hit, normal, at, c : Vector;
+    var ent, passed : CEntity;
+    var terrain : array<name>;
+    var box : Box;
+    var gz, top : float;
+    var k : int;
     var found : bool;
     found = false;
-    if (CjTraceLine(p + Vector(0, 0, up), p - Vector(0, 0, 100), skipA, skipB, hit, ent)) {
+    top = p.Z + up;
+    if (CjTraceLinePassed(Vector(p.X, p.Y, top, 1), Vector(p.X, p.Y, p.Z - 100, 1), skipA, skipB, hit, ent, passed)) {
         z = hit.Z;
         found = true;
     }
-    if (theGame.GetWorld().PhysicsCorrectZ(Vector(p.X, p.Y, p.Z + up, 1), gz) && gz <= p.Z + up) {
-        if (!found || gz > z) {
-            z = gz;
-        }
+    // the ground alone: no thing is in the group Terrain, the moved one neither (23.10.: a flag pole standing on the
+    // ground - the line through the pole came out under the ground and found a cave 27 m down)
+    terrain.PushBack('Terrain');
+    if (theGame.GetWorld().StaticTrace(Vector(p.X, p.Y, top, 1), Vector(p.X, p.Y, p.Z - 100, 1), hit, normal, terrain)
+            && (!found || hit.Z > z)) {
+        z = hit.Z;
         found = true;
     }
-    if (theGame.GetWorld().NavigationComputeZ(Vector(p.X, p.Y, p.Z, 1), p.Z - 100, p.Z + up, gz)) {
-        if (!found || gz > z) {
-            z = gz;
+    // the line went through the moved thing (its foot stands on what holds it - a floor, a table - and the line came
+    // out below that): what it stands on, just outside its footprint on four sides - no higher than 10 cm above its
+    // foot (a wall or a fence beside it is not what holds it)
+    if (passed) {
+        passed.CalcBoundingBox(box);
+        c = passed.GetWorldPosition();
+        for (k = 0; k < 4; k += 1) {
+            at = p;
+            if (k == 0) {
+                at.X = p.X + box.Min.X - c.X - 0.03;
+            } else if (k == 1) {
+                at.X = p.X + box.Max.X - c.X + 0.03;
+            } else if (k == 2) {
+                at.Y = p.Y + box.Min.Y - c.Y - 0.03;
+            } else {
+                at.Y = p.Y + box.Max.Y - c.Y + 0.03;
+            }
+            if (CjTraceLine(Vector(at.X, at.Y, top, 1), Vector(at.X, at.Y, p.Z - 100, 1), skipA, skipB, hit, ent)
+                    && hit.Z <= top - up + 0.1 + MaxF(up - 1.5, 0) && (!found || hit.Z > z)) {
+                z = hit.Z;
+                found = true;
+            }
         }
+    }
+    // the physics' ground: when the trace found nothing, or found less high - but never above p's foot, there it is
+    // the moved thing itself (the physics cannot leave it out). 23.10.: a flag pole 5 mm in the ground - the trace
+    // went past the pole into the ground and found a cave 27 m down; the physics had the ground
+    if (theGame.GetWorld().PhysicsCorrectZ(Vector(p.X, p.Y, p.Z + up, 1), gz) && gz <= p.Z + up
+            && (!found || (gz > z && gz <= p.Z + 0.05))) {
+        z = gz;
+        found = true;
+    }
+    if (!found && theGame.GetWorld().NavigationComputeZ(Vector(p.X, p.Y, p.Z, 1), p.Z - 100, p.Z + up, gz)) {
+        z = gz;
         found = true;
     }
     return found;
@@ -345,10 +457,13 @@ function CjCalm(e : CEntity) {
 
 // the editor's frame (CjFlyTick): people placed a moment ago stop where they stand, in their idle pose
 // Every move of the editor's own things. A plant of the foliage library is teleported too, but its tree stays drawn
-// where it was made (Maxim 04.10.) - moving a placed one is still to come (moving the drawn tree through the script
+// where it was made (MaximdeWinter 04.10.) - moving a placed one is still to come (moving the drawn tree through the script
 // extender froze the game). Placing one goes through the ghost below. -> the entity.
 function CjPut(e : CEntity, pos : Vector, rot : EulerAngles) : CEntity {
     if (e) {
+        if (e == thePlayer) {
+            CjOffHorse();
+        }
         e.TeleportWithRotation(pos, rot);
         CjSetHome(e, pos, rot);
     }
@@ -358,12 +473,17 @@ function CjPut(e : CEntity, pos : Vector, rot : EulerAngles) : CEntity {
 // a placed one's place in the project: where the editor put it
 function CjSetHome(e : CEntity, pos : Vector, rot : EulerAngles) {
     var ed : CjEditor;
+    var person : CActor;
     var i : int;
     ed = theGame.CjEditorGet();
     i = ed.placed.FindFirst(e);
     if (i >= 0) {
         ed.homes[i] = pos;
         ed.homeRots[i] = rot;
+        person = (CActor)e;
+        if (!person) {
+            CjRenewLater(e);
+        }
     }
 }
 
@@ -374,6 +494,9 @@ function CjAddPlaced(e : CEntity, template : string, pos : Vector, rot : EulerAn
     ed.templates.PushBack(template);
     ed.homes.PushBack(pos);
     ed.homeRots.PushBack(rot);
+    while (ed.looks.Size() < ed.placed.Size()) {   // (one per placed - after a live reload it starts empty)
+        ed.looks.PushBack("");
+    }
 }
 
 function CjForgetPlaced(i : int) {
@@ -383,6 +506,109 @@ function CjForgetPlaced(i : int) {
     ed.templates.Erase(i);
     ed.homes.Erase(i);
     ed.homeRots.Erase(i);
+    if (i < ed.looks.Size()) {              // (after a live reload of the scripts it starts empty)
+        ed.looks.Erase(i);
+    }
+}
+
+// A thing's collision stays where it was made: a teleport moves only what is drawn (measured 23.10. with a chest:
+// spawned at x 678, teleported to 681 - the traces still hit it at 678, 3 s later too; SetEnabled and
+// SetHideInGame left it there as well, Destroy took it away). MaximdeWinter: a chest moved back to where it was made stood on
+// an invisible chest. So a placed thing that was moved is made anew where it stands, 0.3 s after its last move (not
+// on every step of a drag or of the wheel). People are not: their collision moves with them.
+function CjRenewLater(e : CEntity) {
+    var ed : CjEditor;
+    var k : int;
+    var at : float;
+    ed = theGame.CjEditorGet();
+    at = EngineTimeToFloat(theGame.GetEngineTime()) + 0.3;
+    k = ed.renew.FindFirst(e);
+    if (k >= 0) {
+        ed.renewAt[k] = at;
+    } else {
+        ed.renew.PushBack(e);
+        ed.renewAt.PushBack(at);
+    }
+}
+
+function CjRenewDue() {
+    var ed : CjEditor;
+    var now : float;
+    var k : int;
+    var e : CEntity;
+    ed = theGame.CjEditorGet();
+    now = EngineTimeToFloat(theGame.GetEngineTime());
+    for (k = ed.renew.Size() - 1; k >= 0; k -= 1) {
+        if (ed.renewAt[k] <= now) {
+            e = ed.renew[k];
+            ed.renew.Erase(k);
+            ed.renewAt.Erase(k);
+            if (e) {
+                CjRenew(e);
+            }
+        }
+    }
+}
+
+// placed[i] made anew from its template where the project has it: its tags, its look and what is in it go along;
+// the selection and the group hold the new one
+function CjRenew(e : CEntity) : CEntity {
+    var ed : CjEditor;
+    var tpl : CEntityTemplate;
+    var n : CEntity;
+    var tags : array<name>;
+    var items : array<SItemUniqueId>;
+    var from, to : CInventoryComponent;
+    var ge, gn : CGameplayEntity;
+    var i, k : int;
+    ed = theGame.CjEditorGet();
+    i = ed.placed.FindFirst(e);
+    if (i < 0) {
+        return e;
+    }
+    tpl = (CEntityTemplate)LoadResource(ed.templates[i], true);
+    if (!tpl) {
+        return e;
+    }
+    n = theGame.CreateEntity(tpl, ed.homes[i], ed.homeRots[i]);
+    if (!n) {
+        return e;
+    }
+    tags = e.GetTags();
+    for (k = 0; k < tags.Size(); k += 1) {
+        n.AddTag(tags[k]);
+    }
+    CjShowClue(n);
+    if (i < ed.looks.Size() && ed.looks[i] != "") {
+        n.ApplyAppearance(ed.looks[i]);
+    }
+    ge = (CGameplayEntity)e;
+    gn = (CGameplayEntity)n;
+    if (ge && gn) {
+        from = ge.GetInventory();
+        to = gn.GetInventory();
+        if (from && to) {
+            to.GetAllItems(items);
+            for (k = items.Size() - 1; k >= 0; k -= 1) {
+                to.RemoveItem(items[k], to.GetItemQuantity(items[k]));
+            }
+            items.Clear();
+            from.GetAllItems(items);
+            for (k = 0; k < items.Size(); k += 1) {
+                to.AddAnItem(from.GetItemName(items[k]), from.GetItemQuantity(items[k]), true, true);
+            }
+        }
+    }
+    ed.placed[i] = n;
+    if (ed.selected == e) {
+        ed.selected = n;
+    }
+    k = ed.group.FindFirst(e);
+    if (k >= 0) {
+        ed.group[k] = n;
+    }
+    CjDestroy(e);
+    return n;
 }
 
 // back to editing: every placed one where the project has it (while playing the game pushed people apart that stood
@@ -405,9 +631,9 @@ function CjDestroy(e : CEntity) {
 }
 
 // The ghost of a plant being placed: the tree alone, drawn by the script extender (TW3SE_FoliagePlant /
-// TW3SE_FoliageRemoveAt - Maxim's idea, 04.10.: move only the look while placing, the click plants the real one).
+// TW3SE_FoliageRemoveAt - MaximdeWinter's idea, 04.10.: move only the look while placing, the click plants the real one).
 // Its tree resource is loaded from the .srt (a tree read out of an entity's component made the game freeze).
-// A tree taken out right after it was drawn stays (Maxim 04.10.: moving the ghost left one every half second) - the
+// A tree taken out right after it was drawn stays (MaximdeWinter 04.10.: moving the ghost left one every half second) - the
 // render thread has not put it in yet. So a ghost is taken out only once it surely stands (0.3 s), and a new one is
 // drawn at most every 0.08 s; in between the cursor's place waits (CjGhostDue draws it).
 function CjGhostTo(pos : Vector, rot : EulerAngles) {
@@ -715,7 +941,7 @@ exec function cj_edit_existing(on : bool) {
     CjOut("editexisting|" + CjYesNo(on));
 }
 
-// While the suite runs, Esc is the editor's (Maxim 05.10.: playing from the editor, Esc goes back to editing, as in
+// While the suite runs, Esc is the editor's (MaximdeWinter 05.10.: playing from the editor, Esc goes back to editing, as in
 // Unreal): the game's pause menu stays shut - the fact lives 10 s, the suite renews it - except while one of the
 // game's menus is open (the game menu opened from the editor's File menu)
 exec function cj_pause_menu_off() {
@@ -782,6 +1008,59 @@ exec function cj_new_session(definition : string) {
     } else {
         CjOut("session_failed|" + definition);
     }
+}
+
+// a session of a project (sessions.start_project): no save while it runs - autosaves, quick saves and the menu's
+// Save all locked (the player's saves are never touched by Conjunction, MaximdeWinter 14.11.); the lock ends with the session
+@addField(CR4Game)
+var cjSessionLock : int;
+
+@addField(CR4Game)
+var cjSessionLocked : bool;
+
+// (ReleaseNoSaveLockByName faulted, 14.11.: the lock's number kept instead; not unique - unique hands out no
+// number when one of that name is there)
+@addMethod(CR4Game)
+function CjSessionLock(on : bool) {
+    if (cjSessionLocked) {
+        ReleaseNoSaveLock(cjSessionLock);
+        cjSessionLocked = false;
+    }
+    if (on) {
+        CreateNoSaveLock("conjunction_session", cjSessionLock, false, false);
+        cjSessionLocked = true;
+    }
+}
+
+exec function cj_session_nosave() {
+    theGame.CjSessionLock(true);
+    CjOut("session|nosave");
+}
+
+exec function cj_session_lock(on : bool) {
+    theGame.CjSessionLock(on);
+    CjOut("session|lock");
+}
+
+// tests: may the game save right now (any lock: a session's, a fight, a scene)?
+exec function cj_saves_locked() {
+    if (theGame.AreSavesLocked()) {
+        CjOut("saves|locked");
+    } else {
+        CjOut("saves|free");
+    }
+}
+
+// Build & Play in a session: the session's own save for the reload (a manual save of its own, not the player's
+// quick save; play.lua deletes it once loaded) - the lock off for it, set again when the save has loaded
+exec function cj_session_save() {
+    theGame.CjSessionLock(false);
+    if (theGame.AreSavesLocked()) {
+        CjOut("save|locked");
+        return;
+    }
+    theGame.SaveGame(SGT_Manual, -1);
+    CjOut("save|requested");
 }
 
 // the game's own menu (save, load, settings) from the editor
@@ -1166,13 +1445,14 @@ exec function cj_move_to(x : float, y : float, z : float, collide : bool, snap :
     var ent : CEntity;
     var gz, now : float;
     var i : int;
+    var vertical : bool;
     ed = theGame.CjEditorGet();
     if (!ed.on || !ed.selected) {
         return;
     }
     target = Vector(x, y, z, 1);
     cur = ed.selected.GetWorldPosition();
-    // collision: what is in the way stops it (06.10.: it climbed over the obstacle - Maxim: no way round)
+    // collision: what is in the way stops it (06.10.: it climbed over the obstacle - MaximdeWinter: no way round)
     if (collide) {
         from = cur + Vector(0, 0, 0.3);
         to = target + Vector(0, 0, 0.3);
@@ -1184,8 +1464,11 @@ exec function cj_move_to(x : float, y : float, z : float, collide : bool, snap :
             target.W = 1;
         }
     }
+    // (straight up or down - the height's arrow - it only stops at what is below: within 30 cm of the ground it was
+    // pulled back down, MaximdeWinter 24.10.: after Drop it could never be lifted again)
+    vertical = AbsF(target.X - cur.X) < 0.005 && AbsF(target.Y - cur.Y) < 0.005;
     if ((collide || snap) && CjSurfaceBelow(target, MaxF(cur.Z - target.Z, 0) + 1.5, ed.selected, ed.preview, gz)) {
-        if (snap || target.Z < gz || target.Z - gz < 0.3) {
+        if (snap || target.Z < gz || (!vertical && target.Z - gz < 0.3)) {
             target.Z = gz;
         }
     }
@@ -1199,9 +1482,26 @@ exec function cj_move_to(x : float, y : float, z : float, collide : bool, snap :
     // the group keeps its shape: the others go the same way
     delta = target - ed.selected.GetWorldPosition();
     CjPut(ed.selected, target, ed.selected.GetWorldRotation());
+    CjGroupFollow(delta, collide, snap);
+}
+
+// the rest of the selection moved by delta; with collision (or snap) none goes below what is under it - each on its
+// own (MaximdeWinter 24.10.: the first one lowered, one beside it standing lower went into the ground)
+function CjGroupFollow(delta : Vector, collide : bool, snap : bool) {
+    var ed : CjEditor;
+    var p : Vector;
+    var gz : float;
+    var i : int;
+    ed = theGame.CjEditorGet();
     for (i = 0; i < ed.group.Size(); i += 1) {
         if (ed.group[i]) {
-            CjPut(ed.group[i], ed.group[i].GetWorldPosition() + delta, ed.group[i].GetWorldRotation());
+            p = ed.group[i].GetWorldPosition() + delta;
+            p.W = 1;
+            if ((collide || snap) && CjSurfaceBelow(p, MaxF(-delta.Z, 0) + 1.5, ed.group[i], ed.preview, gz)
+                    && (snap || p.Z < gz)) {
+                p.Z = gz;
+            }
+            CjPut(ed.group[i], p, ed.group[i].GetWorldRotation());
         }
     }
 }
@@ -1210,10 +1510,10 @@ exec function cj_move_to(x : float, y : float, z : float, collide : bool, snap :
 // what it lands on), on the grid if there is one; the app sends this whenever the cursor moves while it is held
 exec function cj_move_free(sx : float, sy : float, aspect : float) {
     var ed : CjEditor;
-    var origin, dir, to, start, hit, normal, delta : Vector;
+    var origin, dir, to, start, hit, normal, delta, back : Vector;
     var material : name;
     var comp : CComponent;
-    var ent : CEntity;
+    var ent, backEnt : CEntity;
     var i : int;
     var found : bool;
     ed = theGame.CjEditorGet();
@@ -1223,7 +1523,9 @@ exec function cj_move_free(sx : float, sy : float, aspect : float) {
     CjRay(sx, sy, aspect, origin, dir);
     to = origin + dir * 400;
     start = origin;
-    for (i = 0; i < 8 && !found; i += 1) {
+    // (23.10.: in 5 cm steps the ray went on through the object itself to the ground far behind it - at a flat
+    // view it jumped 10 to 17 m back and forth every frame; now from where it leaves the object's box)
+    for (i = 0; i < 30 && !found; i += 1) {
         if (!theGame.GetWorld().StaticTraceWithAdditionalInfo(start, to, hit, normal, material, comp)) {
             return;
         }
@@ -1233,8 +1535,10 @@ exec function cj_move_free(sx : float, sy : float, aspect : float) {
         }
         if (!ent || (ent != ed.selected && ent != ed.preview && ed.group.FindFirst(ent) < 0)) {
             found = true;
-        } else {
-            start = hit + dir * 0.05;
+        } else if (CjSkip(ent, hit, dir, start, back, backEnt) && backEnt != ed.selected && backEnt != ed.preview
+                   && ed.group.FindFirst(backEnt) < 0) {
+            hit = back;
+            found = true;
         }
     }
     if (!found) {
@@ -1247,11 +1551,7 @@ exec function cj_move_free(sx : float, sy : float, aspect : float) {
     hit.W = 1;
     delta = hit - ed.selected.GetWorldPosition();
     CjPut(ed.selected, hit, ed.selected.GetWorldRotation());
-    for (i = 0; i < ed.group.Size(); i += 1) {
-        if (ed.group[i]) {
-            CjPut(ed.group[i], ed.group[i].GetWorldPosition() + delta, ed.group[i].GetWorldRotation());
-        }
-    }
+    CjGroupFollow(delta, true, false);           // (dragged over the surfaces: the others stay on them too)
     // nothing logged here: a log line every frame made it lag (cj_move_done reports where it ends)
 }
 
@@ -1315,6 +1615,9 @@ exec function cj_clear() {
     ed.templates.Clear();
     ed.homes.Clear();
     ed.homeRots.Clear();
+    ed.looks.Clear();
+    ed.renew.Clear();
+    ed.renewAt.Clear();
     ed.selected = NULL;
     ed.group.Clear();
     CjOut("cleared");
@@ -1322,7 +1625,7 @@ exec function cj_clear() {
 
 // (exec functions cannot be called from scripts - so the work is here, the exec only forwards)
 // a clue of the game (a corpse, blood, tracks) is dark until a quest switches it on - in the editor it must show
-// (Maxim 01.10.: "Go to" the corpse, nothing there)
+// (MaximdeWinter 01.10.: "Go to" the corpse, nothing there)
 function CjShowClue(e : CEntity) {
     var clue : W3MonsterClue;
     clue = (W3MonsterClue)e;
@@ -1367,6 +1670,18 @@ exec function cj_layer(group : string, show : bool) {
     CjOut("layer|" + group + "|" + CjYesNo(show));
 }
 
+// the player off his horse at once, before the editor moves him: a teleport takes him from the saddle and leaves him
+// in the riding animation (05.11.) - dismounted as the game does when a horse is hidden under its rider
+function CjOffHorse() {
+    var horse : W3HorseComponent;
+    if (thePlayer.IsUsingHorse(true)) {
+        horse = thePlayer.GetUsedHorseComponent();
+        if (horse) {
+            horse.IssueCommandToDismount(DT_instant);
+        }
+    }
+}
+
 // try it out: Geralt onto the ground below the editor camera (the editor stays on; F8 hands him over)
 exec function cj_player_here() {
     var hit, from : Vector;
@@ -1376,6 +1691,7 @@ exec function cj_player_here() {
     }
     from = thePlayer.w3sFlyPos;
     if (CjTraceLine(from, from - Vector(0, 0, 200), theGame.CjEditorGet().preview, NULL, hit, ent)) {
+        CjOffHorse();
         thePlayer.Teleport(hit);
         thePlayer.CjFlySetHome(hit);               // closing the editor leaves him here
         CjOut("player|" + FloatToString(hit.X) + "," + FloatToString(hit.Y) + "," + FloatToString(hit.Z));
@@ -1494,13 +1810,25 @@ exec function cj_cursor_hit(sx : float, sy : float, aspect : float) {
 }
 
 // while a place is edited, the NPCs its quest spawned step aside (the editor shows its own copies)
+// a built person hidden while its copy is edited, as the editor's ghost Geralt is: unseen and without collision
+// (23.10.: switching its mesh parts off grew a list without end - the game switches a person's parts on again - and a
+// built thing's collision stays anyway; built things go with their layer group, cj_layer)
+function CjHideBuilt(e : CEntity, hide : bool) {
+    var person : CActor;
+    e.SetHideInGame(hide);
+    person = (CActor)e;
+    if (person) {
+        person.EnableCollisions(!hide);
+    }
+}
+
 exec function cj_hide_tag(tag : name, hide : bool) {
     var ents : array<CEntity>;
     var i : int;
     theGame.GetEntitiesByTag(tag, ents);
     for (i = 0; i < ents.Size(); i += 1) {
         if (!ents[i].HasTag('cj_placed')) {
-            ents[i].SetHideInGame(hide);
+            CjHideBuilt(ents[i], hide);
         }
     }
     CjOut("hide|" + NameToString(tag) + "|" + IntToString(ents.Size()) + "|" + CjYesNo(hide));
@@ -1629,9 +1957,19 @@ exec function cj_loot_set(x : float, y : float, z : float, loot : name, clear : 
 
 exec function cj_appearance(x : float, y : float, z : float, appearance : string) {
     var e : CEntity;
+    var ed : CjEditor;
+    var i : int;
+    ed = theGame.CjEditorGet();
     e = CjFindPlaced(x, y, z);
     if (e) {
         e.ApplyAppearance(appearance);
+        i = ed.placed.FindFirst(e);
+        while (i >= 0 && ed.looks.Size() <= i) {
+            ed.looks.PushBack("");
+        }
+        if (i >= 0) {
+            ed.looks[i] = appearance;   // (made anew: CjRenew gives it again)
+        }
         CjOut("appearance|" + appearance);
     }
 }

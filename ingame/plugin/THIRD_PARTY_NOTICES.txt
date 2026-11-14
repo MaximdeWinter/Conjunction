@@ -1,0 +1,29 @@
+cj_core.dll and cj_qt.dll - third-party software
+
+cj_core.dll is built with the code below.
+
+SQLite 3.50.4 - public domain (deps/sqlite)
+stb_image 2.30 and stb_image_write 1.16 - Sean Barrett - public domain (deps/stb)
+Smooth scaling from Qt 6.11.2 (src/gui/painting/qimagescale.cpp) - The Qt Company Ltd., Daniel M. Duley, Carsten
+  Haitzler and contributors, Willem Monsuwe - BSD-2-Clause and Imlib2 (the license text is at the top of
+  qtscale.cpp)
+TweetNaCl 20140427 - Daniel J. Bernstein, Bernard van Gastel, Wesley Janssen, Tanja Lange, Peter Schwabe, Sjaak
+  Smetsers - public domain (deps/tweetnacl)
+LZ4 1.9.4 (lz4.c, lz4hc.c) - Yann Collet - BSD-2-Clause (the license text is at the top of deps/lz4/lz4.h)
+BCn block decoders from Pillow 12.2.0 (src/libImaging/BcnDecode.c) - public domain (CC0) (bcn_pillow.h)
+Resampling, premultiplying and pasting as Pillow 12.2.0 does them (src/libImaging/Resample.c, Convert.c, Paste.c,
+  ImagingUtils.h; mosaic.cpp) - Secret Labs AB, Fredrik Lundh, Jeffrey A. Clark and contributors - HPND license:
+  Permission to use, copy, modify and distribute this software and its documentation for any purpose and without
+  fee is hereby granted, provided that the above copyright notice appears in all copies, and that both that
+  copyright notice and this permission notice appear in supporting documentation, and that the name of Secret Labs
+  AB or the author not be used in advertising or publicity pertaining to distribution of the software without
+  specific, written prior permission. SECRET LABS AB AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL SECRET LABS AB OR THE
+  AUTHOR BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+  OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+cj_qt.dll uses Qt 6.11.2 (Qt6Core.dll, Qt6Gui.dll, Qt6OpenGL.dll, platforms\qwindows.dll) - The Qt Company Ltd. -
+LGPL-3.0. The Qt libraries are separate files in tw3se\plugins\cj_qt; you can replace them with your own build of
+the same version. Source code:
+https://code.qt.io and https://download.qt.io/official_releases/qt/6.11/6.11.2/

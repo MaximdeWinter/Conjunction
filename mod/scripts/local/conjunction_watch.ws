@@ -1,5 +1,5 @@
 // conjunction: what the player is shown, in the script log (channel W3S) - a test reads what was really said and
-// offered instead of looking at pictures (Maxim 03.10.: "can you read whether he really said it, with subtitles?")
+// offered instead of looking at pictures (MaximdeWinter 03.10.: "can you read whether he really said it, with subtitles?")
 
 // every subtitle: a scene's line, a line said while the game goes on, a one-liner in passing
 @wrapMethod(CR4HudModuleSubtitles)

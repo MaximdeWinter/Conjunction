@@ -1,6 +1,7 @@
 // conjunction: link - the app sends commands through the script extender (TW3SE, its pipe's exec), and everything the
 // game reports goes back as one line through CjOut (TW3SE_Emit, read by the pipe's events). No -debugscripts.
 import function TW3SE_Emit(text : string);
+import function TW3SE_MountDLC(path : string) : bool;
 import function TW3SE_EntityGuid(e : CEntity) : string;
 import function TW3SE_EntityEffects(e : CEntity) : string;
 import function TW3SE_EntityTemplate(e : CEntity) : CEntityTemplate;
@@ -89,7 +90,8 @@ exec function cj_quest() {
 }
 
 exec function cj_fact(id : string) {
-    CjOut("fact|" + id + "=" + IntToString(FactsQuerySum(id)));
+    // the latest value (what a quest's "wait until" and the runs compare) and the sum of every entry of the fact
+    CjOut("fact|" + id + "=" + IntToString(FactsQueryLatestValue(id)) + "|sum=" + IntToString(FactsQuerySum(id)));
 }
 
 // every objective below a quest (phases -> objectives) with its status
@@ -364,11 +366,12 @@ exec function cj_teleport(x : float, y : float, z : float, yaw : float) {
         pos = safe;
     }
     pos.W = 1;
+    CjOffHorse();
     thePlayer.TeleportWithRotation(pos, EulerAngles(0, yaw, 0));
     CjOut("teleport|" + VecToString(pos));
 }
 
-// tests (Maxim 02.10.: "tell Geralt: go to this point, and he goes"): the player walks (or runs) there on the
+// tests (MaximdeWinter 02.10.: "tell Geralt: go to this point, and he goes"): the player walks (or runs) there on the
 // navmesh the way an NPC does, around houses and fences; cj_player_go_state says how far he is
 // (a state of the player's own, as the game's ApproachInteractionState: in exploration his moves come from the pad,
 // an ActionMoveToAsync there does nothing - 02.10. measured)
@@ -772,7 +775,81 @@ exec function cj_path_info(tag : name) {
     CjOut("pathinfo|" + NameToString(tag) + "|" + IntToString(n) + " points|" + s);
 }
 
+// Build & Play into the running game (the game's own Build & Play): a run before switched off for the DLC manager
+// (EnableDLC: its quest, layers and people stay out of the next load - the game's DLC menu does the same), and the
+// new run's folder mounted and registered (TW3SE: livedlc) - then a save is loaded again
+exec function cj_dlc_enable(id : name, on : bool) {
+    var dlc : CDLCManager;
+    dlc = theGame.GetDLCManager();
+    dlc.EnableDLC(id, on);
+    CjOut("dlc|" + NameToString(id) + "|enabled=" + CjFlag(dlc.IsDLCEnabled(id)) + "|available=" + CjFlag(dlc.IsDLCAvailable(id)));
+}
+
+exec function cj_dlc_state(id : name) {
+    var dlc : CDLCManager;
+    dlc = theGame.GetDLCManager();
+    CjOut("dlc|" + NameToString(id) + "|enabled=" + CjFlag(dlc.IsDLCEnabled(id)) + "|available=" + CjFlag(dlc.IsDLCAvailable(id)));
+}
+
+exec function cj_live_dlc(path : string) {
+    CjOut("livedlc|" + CjFlag(TW3SE_MountDLC(path)));
+}
+
+function CjFlag(b : bool) : string {
+    if (b) {
+        return "1";
+    }
+    return "0";
+}
+
 // tests: the newest save loaded again (a quest built while the game ran: does the load take it in?)
+// the saves the game lists: one line each, "save|<file name>" (Build & Play's clean save is loaded by its name)
+exec function cj_saves() {
+    var saves : array< SSavegameInfo >;
+    var i : int;
+    theGame.ListSavedGames(saves);
+    for (i = 0; i < saves.Size(); i += 1) {
+        CjOut("save|" + saves[i].filename);
+    }
+    CjOut("saves|" + IntToString(saves.Size()));
+}
+
+// one save by its file name (without .sav, any case - the game lists them lower case): Build & Play in one run loads the project's clean save - one made before
+// any run of the quest was in the game, so only the new run starts (MaximdeWinter 23.10.: two runs side by side otherwise)
+exec function cj_load_save(file : string) {
+    var saves : array< SSavegameInfo >;
+    var i : int;
+    theGame.ListSavedGames(saves);
+    for (i = 0; i < saves.Size(); i += 1) {
+        if (StrLower(saves[i].filename) == StrLower(file) || StrLower(saves[i].filename) == StrLower(file) + ".sav") {
+            CjOut("loadsave|" + file);
+            theGame.LoadGameInit(saves[i], false);
+            return;
+        }
+    }
+    CjOut("loadsave|none|" + file);
+}
+
+// the journal follows a quest whose name holds this (a run's quest id): after Build & Play the clean save's tracked
+// quest is an older one - the new run's goals on the screen
+exec function cj_track(qid : string) {
+    var jm : CWitcherJournalManager;
+    var all : array< CJournalBase >;
+    var q : CJournalQuest;
+    var i : int;
+    jm = theGame.GetJournalManager();
+    jm.GetActivatedOfType('CJournalQuest', all);
+    for (i = 0; i < all.Size(); i += 1) {
+        q = (CJournalQuest)all[i];
+        if (q && StrFindFirst(q.baseName, qid) >= 0) {
+            jm.SetTrackedQuest(q);
+            CjOut("track|" + q.baseName);
+            return;
+        }
+    }
+    CjOut("track|none|" + qid);
+}
+
 exec function cj_reload() {
     CjOut("reload|loading the last save");
     theGame.LoadLastGameInit();

@@ -36,9 +36,9 @@ A credit is welcome ("Made with Conjunction" with a link to its page). It is not
 
 Third-party parts
 
-Conjunction contains software of other authors (Python, Qt for Python, PyYAML, Pillow, cryptography, lz4 and more).
-These parts stay under their own licenses, listed in THIRD_PARTY_NOTICES.txt and the licenses folder. Where one of them gives you more rights (for example to replace the Qt libraries), those
-rights apply to that part.
+Conjunction contains software of other authors (Qt, SQLite, LZ4, parts of Pillow and Python, Lucide icons and more).
+These parts stay under their own licenses, listed in THIRD_PARTY_NOTICES.txt and the licenses folder. Where one of
+them gives you more rights (for example to replace the Qt libraries), those rights apply to that part.
 
 
 No warranty

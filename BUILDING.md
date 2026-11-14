@@ -1,39 +1,36 @@
 # Building Conjunction
 
-Conjunction is a Python application. The release is one folder with Conjunction.exe, made with PyInstaller.
+Conjunction is a TW3SE mod: Lua (`ingame/lua/conjunction`, needs no build), two DLLs in C++ (`ingame/plugin`) and
+WitcherScript (`mod/scripts`, `mod/runtime/scripts`).
 
 ## What is needed?
 
 - Windows 10 or 11 (64-bit)
-- Python 3.14 (64-bit)
-- Visual Studio 2022 Build Tools with **Desktop development with C++** (for PyInstaller's bootloader)
-- [radish modding tools](https://www.nexusmods.com/witcher3/mods/3620) v2020-11-21: the zip goes unchanged into
-  `third_party\radish\` (the release's self test unpacks it the way a user's first start does)
+- Visual Studio 2022 Build Tools with **Desktop development with C++**
+- TW3SE's headers (the `include` folder of TW3SE's SDK)
+- Qt 6.11.2 for MSVC 2022 64-bit (Qt6Core, Qt6Gui, Qt6OpenGL)
+- Python 3.14 (64-bit), for the release zip
 
-## Run from source
+## Build the plug-ins
+
+Set `TW` to TW3SE's folder (with its `include`; else `tw3se` beside this repository) and `QT` to Qt 6.11.2 (else
+`C:\Apps\Qt\6.11.2`). Then:
 
 ```
-pip install -r requirements.txt
-python -m conjunction
+ingame\plugin\build_plugin.bat
 ```
+
+The DLLs are in `ingame\plugin\build`.
 
 ## Build the release
 
 ```
-pip install -r requirements.txt pyinstaller==6.20.0
-python tools\release\build_bootloader.py
-python tools\release\make_release.py
+python tools\release\make_ingame_release.py
 ```
 
-1. `build_bootloader.py` downloads PyInstaller's source for the installed version and builds its bootloader with
-   MSVC into `tools\release\bootloader\`. The release uses this bootloader in place of the prebuilt one.
-2. `make_release.py` builds Conjunction.exe with `tools\release\conjunction.spec`, runs a self test of the exe in a
-   scratch user folder and zips the folder.
+It puts the Lua files, the DLLs, Qt, the scripts and the texts in `tools\release\ingame` into
+`_scratch\release\ingame\Conjunction-<version>.zip`, laid out as the game folder. The sha256 is beside it. The Qt
+folder is set in `QT_BIN` and `QT_PLUGINS` at the top of the script.
 
-The zip is `_scratch\release\out\Conjunction-<version>.zip`, with its sha256 beside it.
-
-`make_release.py --with-radish` also makes **Conjunction-<version>-with-radish.zip** for GitHub: the same files and
-radish's Nexus zip, unchanged, in `third_party\radish\`.
-
-`make_release.py` stops when PyInstaller was updated and the bootloader is from another version. Run
-`build_bootloader.py` again then.
+Its checks for names (`NO_NAME`) and VirusTotal (`VTCHECK`) are scripts of their own, outside this repository. Without
+them the zip is built unchecked.

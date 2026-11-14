@@ -1,227 +1,158 @@
 # Your first quest
 
 A villager lost her ring to bandits. The player has to talk to her, find the chest with the ring, bring it back and
-get paid. On the way you learn how a quest in Conjunction is put together: projects, steps, dialogues, items,
-testing and sharing. About 20 minutes.
-
-The same quest as slides with pictures from the game: [first-quest.pdf](first-quest.pdf). Every block and kind of
-step is explained in [quest-graph.md](quest-graph.md).
-
-You need The Witcher 3 (Remastered, 5.0 or 5.01), The Witcher 3 REDkit and
-[TW3SE](https://www.nexusmods.com/witcher3/mods/13837) and the [radish modding tools](https://www.nexusmods.com/witcher3/mods/3620) (download
-the zip; Conjunction finds it in your Downloads folder).
+get paid.
 
 ## 1. A project
 
-Everything you make with Conjunction lives in a **project**: the quest, the NPCs and objects placed for it, its items
-and dialogues. A project becomes one mod. There are two kinds:
+Press **F8** in the game's main menu. On **Projects**, press **New project**, name it `The Lost Ring`, choose
+**Quest** and press **Create and open ingame**. The project opens in a session of its own in Velen. Saving is
+deactivated during a session, so your save files don't get confused.
 
-- **Quest**: steps, dialogues and a journal entry. Its NPCs and objects are in the world while the quest runs.
-- **Place mod**: things that are always in the world, like a house or a camp.
-
-Start **Conjunction**. On **Projects**, press **New project**, name it `The Lost Ring`, choose **Quest** and press
-**Create and open ingame**. The game starts by itself and loads your last save. Go to an open area where the quest
-should take place.
-
-Only one project is in the game at a time. Opening another one (**File** > **Open project ...**, or a project on
-the **Projects** page) restarts the game with only that project in it.
+Go to an open area where the quest should take place.
 
 ## 2. The editor
 
-Once the save is loaded, the editor's bar appears at the top of the game.
+- **F8** switches between editing and playing. While you edit, the game stands still.
+- Hold the right mouse button to look around, **W A S D** to fly, **Space** up, **X** down. Hold **F** and turn the
+  mouse wheel to adjust the fly speed.
+- **Select** moves, turns, duplicates (**Ctrl+D**) and deletes (**Del**) what you placed.
+- **Asset Browser** has every NPC, creature, object and item of the game.
+- **Project** opens the panel: **Places**, **Quest** and **Build**.
 
-- **F8** switches between editing and playing. While you edit, the game stands still and the camera flies freely.
-  While you play, you control the player as usual; **Esc** brings you back to editing.
-- **Camera**: hold the right mouse button to look around, **W A S D** to fly, **Space** up, **X** down. Hold **F**
-  and turn the mouse wheel to change the fly speed.
-- **File** > **Game menu ...** opens the game's own menu (save, load, settings).
-
-The bar has three modes. Each shows its key next to it.
-
-- **Select** picks objects and NPCs you placed. A selected object can be moved with its arrows, turned with the mouse
-  wheel, duplicated (**Ctrl+D**) or deleted (**Del**).
-- **Asset Browser** is the catalog of everything the game has: NPCs, creatures, objects and items, sorted into
-  categories and searchable. Click an entry to see it on the right, **Place** puts it under the cursor, a click into
-  the world sets it down.
-- **Look** only moves the camera.
-
-**Project** at the top right opens the project panel with the tabs **Places** (the locations of the project and the
-objects in them), **Quest** (the quest graph) and **Build** (testing and exporting). Every change is saved right
-away. **Ctrl+Z** undoes.
+Every change is saved right away. **Ctrl+Z** undoes.
 
 ## 3. How a quest is built
 
-**Project** > **Quest**. The name at the top is the quest's name in the journal. Below it is the quest graph.
+**Project** > **Quest**. The name at the top is the quest's name in the journal. Below it is the quest graph: steps
+from **QUEST STARTS** down, each line leading to the next step.
 
-A quest is a chain of **steps** that runs from top to bottom, starting at **QUEST STARTS**. The line between two steps
-is the order: when a step is done, the quest follows its line to the next one. Click **QUEST STARTS** to set the
-quest's journal section (main quest, side quest, contract, treasure hunt), its journal entry and when it starts:
-**Starts automatically** (at once), **With a game quest ...** (as soon as that quest of the game starts) or **After a
-game quest ...** (once it is over). The last two open the story map: click a quest and press **Start my quest with
-this** or **Start my quest after this**. The quest enters the journal and its NPCs the world when it starts.
+**QUEST STARTS** sets the journal section, the journal entry and when the quest starts: **Starts automatically**,
+**With a game quest ...** or **After a game quest ...**. The last two open the story map with every quest of the game.
 
-New steps come from the blocks on the left:
+The blocks on the left:
 
-- **Goal**: something the player has to do (talk to someone, go somewhere, collect something). The quest waits until
-  it is done, and the journal shows it as an objective.
-- **Action**: something the game does by itself (a reward, a weather change, an NPC turning hostile). It happens at
-  once and the quest goes on.
-- **Choice**: splits the quest into branches (either / or, at random, or by a condition).
-- **Meanwhile**: a parallel track, steps that run alongside the story.
+- **Goal**: something the player has to do. The journal shows it as an objective.
+- **Action**: something the game does (a reward, a weather change, an NPC turning hostile).
+- **Choice**: branches (either / or, at random, or by a condition).
+- **Meanwhile**: a track alongside the story.
 - **Chapter**: a heading for a part of a long quest.
-- **End**: closes the quest as completed or failed.
+- **End**: completed or failed.
 
-Click a block to add it after the selected step, or drag it onto a line to put it in between. The **▾** next to a
-step's kind chooses what exactly it is: a Goal can be Talk, Go to, Collect, Kill and more.
+A block goes after the selected step, or between two steps when you drag it onto their line. The **▾** beside a
+step's kind chooses what it is: a Goal can be Talk, Go to, Collect, Kill and more.
 
-Click a step to open its **card** below the graph, where you fill in its fields. The top line of the card is the
-objective the journal shows; leave it as it is or write your own. Whatever is still missing is written in red, on the
-step and on the card (`Missing: character`). A step's **output** is the small square at its bottom: until it leads to
-the next step or to an End, the step says `output not wired`.
+A step's **card** opens below the graph. What is missing is red (`Missing: character`). An output that leads nowhere
+says `output not wired`.
 
 ## 4. Step 1: talk to the villager
 
-Click **Goal** and set its kind to **Talk**. A Talk is a dialogue the player has to have with an NPC.
+Add a **Goal** and set it to **Talk**.
 
-The card asks **who**. **choose who** opens a list:
-
-- **Pick in world**: click an NPC of this project in the world
-- **Create a new person**: place a new NPC
-- below: the NPCs already placed in this project, with a search
-
-Choose **Create a new person**. The Asset Browser opens on NPCs. Search for townswoman and double click **Rich
-Townswoman**. She is a folder with her 9 looks. A green speech mark means the look can speak in a dialogue (the mouth
-moves with the lines), a red one means it stays silent. Click a look with a green mark to see it on the right, press
-**Place** and click where she should stand. While you place, the panel turns see-through, and the bottom of the
-screen says what the next click does (**Esc** cancels). She now belongs to the quest, and the card shows her under
-**who**.
+**choose who** > **Create a new person** opens the Asset Browser on NPCs. Search `townswoman` and open **Rich
+Townswoman**: a folder with her 9 looks. A green speech mark means the look can speak in a dialogue, a red one that
+it stays silent. Choose a look with a green mark, press **Place** and set her down.
 
 **starts** decides how the dialogue begins:
 
 | starts | the dialogue begins |
 |---|---|
 | On interaction (E) | when the player talks to her |
-| When the player is near | by itself, when the player comes close |
+| When the player is near | when the player comes close |
 | Overheard (the player listens) | as the player walks past; the player only listens |
-| NPC calls out | she calls a line when the player comes close, then waits to be talked to |
+| NPC calls out | she calls a line when the player comes close, then waits |
 | Immediately (cutscene) | right away, as a cutscene |
 
 Choose **NPC calls out** and type what she calls: `Witcher! Over here!`
 
-**Edit dialogue** opens the dialogue editor. A dialogue is built like the quest, from top to bottom, with its own
-blocks:
+**Edit dialogue** opens the dialogue editor, with its own blocks:
 
 - **Line**: something a character says. Click the name to change the speaker.
 - **Choice**: options the player picks from.
-- **If**: a branch that depends on a condition.
+- **If**: a branch by a condition.
 
-Each option ends in one way, shown on the option:
+Each option ends one way:
 
 | ending | what happens |
 |---|---|
 | end: continue | the Talk is done, the quest goes on |
-| end: repeatable | the dialogue ends, the Talk stays open; the player can come back later |
+| end: repeatable | the dialogue ends, the player can come back later |
 | end: fail quest | the quest fails |
 | back to choice | the choice is shown again (for questions) |
 
-Add her line: `Witcher! Bandits took my ring. They hid it somewhere in the woods.` Then add a **Choice** with two
-options: `I'll find it.` with **end: continue**, `Not now.` with **end: repeatable**. In the graph the Talk now has
-two outputs, **continue** and **repeatable**. **Back** returns to the quest.
+Add her line: `Witcher! Bandits took my very expensive ring. They hid it somewhere in the woods.` Then a **Choice** with two
+options: `I'll find it.` with **end: continue**, `I'm too rich for this.` with **end: repeatable**. **Back** in the upper left returns to the quest.
 
-A line can do more: a gesture, a mood, a camera, a voice from the game or a recording of your own. For short
-dialogues the text is enough: the mouth moves to it by itself.
+A line can also have a gesture, a mood, a camera, a voice of the game or a recording of your own.
 
 ## 5. Step 2: the hiding place
 
-Add a **Goal** of the kind **Go to**: the player has to reach a location.
-
-Press **+ Set the spot**. A flag follows the cursor; click to put it down. The ring around the flag is the distance
-at which the goal counts as reached. **more** on the card sets this distance, the marker on the map and a time of
-day. The flag shows only while you edit. To move the spot later, select the flag and drag it.
+Add a **Goal** set to **Go to**. **+ Set the spot** puts down a flag. The ring around it is where the goal counts as
+reached; **more** on the card changes its size, the map marker and a time of day.
 
 Type the objective: `Find the bandits' hiding place`.
 
 ## 6. Step 3: the ring
 
-Add a **Goal** of the kind **Collect**: the player has to carry an item. The card asks one thing after the other.
+Add a **Goal** set to **Collect**.
 
-1. **what** > **+ item** opens the item window with every item of the game. Search `ring` and click one. On the right
-   you can rename it and change its description: call it `Grandmother's ring`. A renamed item becomes a new item of
-   this quest that looks like the original. **Choose item**.
+1. **what** > **+ item** opens every item of the game. Search `ring`, pick one and rename it to `Cheap fake ring`.
+   A renamed item is a new item of this quest. **Choose item**.
 
    ![the item window: a ring of the game, renamed to a new item of this quest](guide/5_item_window.png)
 
-2. **where** sets how the player gets it:
-   - **in a container**: in a chest, a box or a sack
-   - **a person carries it**: an NPC has it
-   - **not placed**: the player finds or buys it elsewhere
-
-   Choose **in a container**.
-3. **in** > **Create a new container**: the Asset Browser opens on containers. Pick a chest, **Place** it near the
-   flag.
-4. **Random loot**: a container also holds the game's random loot for its kind. **Off**: only the ring is inside.
-
-The step is done when the player carries the ring.
+2. **where**: **in a container**, **a person carries it** or **not placed** (the player finds or buys it
+   elsewhere). Choose **in a container**.
+3. **in** > **Create a new container**: place a chest near the flag.
+4. **Random loot** **Off**: only the ring is inside.
 
 ## 7. Step 4: bring it back
 
-Add another **Goal**, **Talk**, and choose her under **who**: she is already placed.
+Add another **Goal** > **Talk** and choose her under **who**.
 
-In her dialogue, add a line (`Did you find it?`) and a Choice with the option `Here it is.` Under its **Effects**
-choose **Player gives an item** and the ring. An option that hands over an item only shows while the player carries
-it, and choosing it takes the item from the inventory. Give it **end: continue**, and a second option `Not yet.` with
-**end: repeatable**. A Talk that hands something over is shown as **Deliver** in the graph.
+In her dialogue, add a line (`Did you find it?`) and a Choice with the option `Why is this a cheap ring? Ugh here you go.` Under its **Effects**
+choose **Player gives an item** and the ring. That dialogue option only shows while the player carries the ring. Give it **end:
+continue**, and add a second option `Not yet.` with **end: repeatable**.
 
-Then add an **Action** of the kind **Reward**: 50 crowns and 50 experience (**+ item** adds items to it). Last, add an
-**End** and drag the Reward's output onto it. Now every step leads somewhere and the red is gone.
+Then add an **Action** > **Reward**: 50 crowns and 50 experience. Last, add an **End** and drag the Reward's output
+onto it.
 
 ## 8. Test it
 
-**Project** > **Build** > **Check** takes a few seconds. It plays the quest through with a stand-in player. If a branch
-would get stuck (a goal nobody can reach, an output that leads nowhere), it says where.
+**Build** > **Check** plays the quest through with a stand-in player and says where a branch gets stuck.
 
 ![Check: the quest reads and plays through to the end](guide/8_check.png)
 
-**Build & Play** at the top right turns the project into a mod and starts it: the game saves and closes, Conjunction
-builds the quest, and the game starts again with that save. This takes one to two minutes. Then the quest runs the
-way a player gets it, fresh from its first step. Open the journal: **The Lost Ring** is there. Walk up to the
-villager.
+**Build & Play** puts the quest into the session. It starts fresh, and you stand where you stood.
+Open the journal: **The Lost Ring** is there.
 
-To change something, press **F8**, change it and use Build & Play again. To test a later step right away, open
-the step's **···** menu and choose **Play from here**: the quest starts at that step, with the items
-the steps before would have given (the ring is in the inventory).
+To change something, press **F8**, change it and use Build & Play again. **Play from here** in a step's **···** menu
+starts the quest at that step, with the items of the steps before.
 
 ## 9. Share it
 
-**Build** > **Export quest file** first shows the quest's name, where it starts and its description, as the quest's
-Nexus page will show them. Change them if you like. Then it builds the quest under its own name and opens the folder
-`Documents\Conjunction\exports\<quest name>\` with everything to upload:
+**Build** > **Export quest file** makes `Documents\Conjunction\exports\<quest name>\` with:
 
 - a zip for Nexus and mod managers
 - the quest file (`.w3q`) for Conjunction's **Library**
-- a text for the quest's Nexus page: what it is, where it starts, what it needs
+- a placeholder text for the quest's Nexus page
 
-Players install only the quest. The page text recommends the **Conjunction Runtime** (it puts the world back as it
-was when a quest is removed) and names TW3SE when the quest changes the world.
-
-A quest that uses things from other mods (furniture, items of a content pack) lists those mods on the Build tab above
-**Export quest file**. A player who lacks one of them is told which mod is missing and where to get it, see
+A quest with things from other mods lists them on the Build tab. Players who lack one are told where to get it, see
 [content-creators.md](content-creators.md).
 
 ## Next
 
-- an option that leads into a branch of its own: drag its output into the empty graph; drop steps on the new branch
-- a later step that depends on that decision: **Choice** > **If**, with an output for yes and one for no
+Every block and kind of step: [quest-graph.md](quest-graph.md).
+
+- an option with a branch of its own: drag its output into the empty graph
+- a later step that depends on that decision: **Choice** > **If**
 - enemies: **Goal** > **Kill**; a fight after a dialogue: **Action** > **Hostile**
 - clues for the witcher senses: **Goal** > **Find clues**; an object to look at: **Examine**
 - **Gwent** and **Fist fight** as goals, with an output for a lost game
 - a different outcome each time: **Choice** > **At random**
-- something alongside the story (a timer, remarks of a companion): **Meanwhile**; **Stop track** ends it
-- a long quest: **Chapter** headings; **Jump to** at the top of the Quest tab goes to one
-- a scene that plays by itself: a Talk's **starts** > **Immediately (cutscene)**
-- NPCs who act: a line's **Gesture** > **Find another ...** lists the game's scene animations
+- something alongside the story (a timer, remarks of a companion): **Meanwhile**
+- a long quest: **Chapter** headings; **Jump to** at the top of the Quest tab
+- NPCs who act: a line's **Gesture** > **Find another ...**
 - another region: **Action** > **Travel**
-- a cellar or a cave of your own, with the game's grass, ground or water hidden: **Places** > **Hide area**, see
-  [world-changes.md](world-changes.md)
+- a cellar or a cave of your own: **Places** > **Hide area**, see [world-changes.md](world-changes.md)
 - a place that stays in the world, like a house: **New project** > **Place mod**
-- the example projects on **Projects** show all of it ready made

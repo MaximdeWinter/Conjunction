@@ -13,42 +13,70 @@ quest function CjGive(money : int, xp : int) {
     LogChannel('Cj', "give|money=" + IntToString(money) + "|xp=" + IntToString(xp));
 }
 
-// a chapter's journal text in place of the earlier ones: every paragraph of the quest's journal entry but `keep` set
-// inactive (the journal shows what is not inactive - journalQuestMenu.ws), `keep` active. `journalQuest`: the
-// journal quest's baseName (<quest id>_<key>), `keep`: the paragraph's (journal_encoder.py)
-quest function CjJournalOnly(journalQuest : string, keep : string) {
+// a chapter's journal text in place of the earlier ones: every paragraph of the quest's journal entry that shows now
+// but `keep` set inactive (the journal shows what is not inactive - journalQuestMenu.ws), `keep` active, and kept so
+// while this chapter has the say (the game turns paragraphs on again - 07.10.): beside the story, a look every second.
+// Each paragraph it hides is named by a fact (<quest>_jhide_<paragraph>), so a save loaded later hides the same ones;
+// a later Replace of the quest takes over (<quest>_jonly: the step that has the say); paragraphs added after it show.
+// `journalQuest`: the journal quest's baseName (<quest id>_<key>), `keep`: the paragraph's (journal_encoder.py)
+latent quest function CjJournalOnly(journalQuest : string, keep : string, step : int) {
     var jm : CWitcherJournalManager;
     var all : array<CJournalBase>;
     var q : CJournalQuest;
     var group : CJournalQuestDescriptionGroup;
     var para : CJournalBase;
-    var i, k, hidden : int;
+    var i, k, hidden, again : int;
+    var slot, first : string;
     jm = theGame.GetJournalManager();
-    jm.GetActivatedOfType('CJournalQuest', all);
-    for (i = 0; i < all.Size(); i += 1) {
-        q = (CJournalQuest)all[i];
-        if (q && q.baseName == journalQuest) {
-            for (k = 0; k < q.GetNumChildren(); k += 1) {
-                if ((CJournalQuestDescriptionGroup)q.GetChild(k)) {
-                    group = (CJournalQuestDescriptionGroup)q.GetChild(k);
+    slot = journalQuest + "_jonly";
+    first = journalQuest + "_jonly_" + keep;
+    if (FactsQuerySum(first) < 1) {                 // (its first run: this chapter has the say from now on)
+        FactsAdd(slot, step);
+    }
+    while (FactsQueryLatestValue(slot) == step) {
+        if (!group) {
+            all.Clear();
+            jm.GetActivatedOfType('CJournalQuest', all);
+            for (i = 0; i < all.Size(); i += 1) {
+                q = (CJournalQuest)all[i];
+                if (q && q.baseName == journalQuest) {
+                    for (k = 0; k < q.GetNumChildren(); k += 1) {
+                        if ((CJournalQuestDescriptionGroup)q.GetChild(k)) {
+                            group = (CJournalQuestDescriptionGroup)q.GetChild(k);
+                        }
+                    }
                 }
             }
         }
-    }
-    if (!group) {
-        LogChannel('Cj', "journal only|no journal entry " + journalQuest);
-        return;
-    }
-    for (k = 0; k < group.GetNumChildren(); k += 1) {
-        para = group.GetChild(k);
-        if (para.baseName == keep) {
-            jm.ActivateEntry(para, JS_Active);
-        } else if (jm.GetEntryStatus(para) != JS_Inactive) {
-            jm.ActivateEntry(para, JS_Inactive);
-            hidden += 1;
+        if (group) {
+            hidden = 0;
+            for (k = 0; k < group.GetNumChildren(); k += 1) {
+                para = group.GetChild(k);
+                if (para.baseName == keep) {
+                    if (jm.GetEntryStatus(para) == JS_Inactive) {
+                        jm.ActivateEntry(para, JS_Active);
+                    }
+                    continue;
+                }
+                if (FactsQuerySum(first) < 1 && jm.GetEntryStatus(para) != JS_Inactive) {
+                    FactsAdd(journalQuest + "_jhide_" + para.baseName, 1);      // shown when this chapter came
+                }
+                if (FactsQuerySum(journalQuest + "_jhide_" + para.baseName) > 0) {
+                    if (jm.GetEntryStatus(para) != JS_Inactive) {
+                        jm.ActivateEntry(para, JS_Inactive);
+                        again += 1;
+                    }
+                    hidden += 1;
+                }
+            }
+            if (FactsQuerySum(first) < 1) {
+                FactsAdd(first, 1);
+                LogChannel('Cj', "journal only|" + journalQuest + "|" + keep + "|hidden=" + IntToString(hidden));
+            }
         }
+        Sleep(1.0);
     }
-    LogChannel('Cj', "journal only|" + journalQuest + "|" + keep + "|hidden=" + IntToString(hidden));
+    LogChannel('Cj', "journal only|" + journalQuest + "|" + keep + "|over, hidden again " + IntToString(again));
 }
 
 // dialogue choices: the answer the player picked, as a fact the quest branches on (<quest>_s<step>_choice = 1, 2, ..)
@@ -124,7 +152,7 @@ latent quest function CjHasItemsFromN(itemName : name, count : int, fact : strin
     FactsAdd(fact, 1);
 }
 
-// If (Maxim 05.10.): has the player that many of the item - now, once: the fact 1 yes, 2 no
+// If (MaximdeWinter 05.10.): has the player that many of the item - now, once: the fact 1 yes, 2 no
 quest function CjHasItemsNow(item : string, count : int, fact : string) {
     var n : name;
     FactsRemove(fact);
@@ -314,6 +342,70 @@ latent quest function CjSetupDrops(tag : name, loot : string) {
     FactsAdd(fact, 1);
 }
 
+// a container that came into the world empty is switched off by the game (W3Container.DisableIfEmpty): the
+// quest's items put in after it, it is switched on again - its lock (Locked / Unlock) or its loot (05.11.: the
+// strongbox stood there with every interaction off)
+function CjContainerAwake(ge : CGameplayEntity) {
+    var box : W3Container;
+    box = (W3Container)ge;
+    if (box && !box.IsEnabled() && !box.IsEmpty()) {
+        box.Enable(true);
+    }
+}
+
+// is a point in the picture: near enough to be seen and in front of the camera (its view about 70 degrees wide)
+function CjSeen(pos : Vector, metres : float) : bool {
+    var cam, dir, to : Vector;
+    cam = theCamera.GetCameraPosition();
+    to = pos - cam;
+    if (VecLength(to) > metres) {
+        return false;
+    }
+    dir = VecNormalize(theCamera.GetCameraDirection());
+    return VecDot(VecNormalize(to), dir) > 0.55;
+}
+
+// people of a place come into the world (Show place): when the place is in the picture, the picture goes black for
+// a moment first (05.11.: the thieves stood there out of nothing, right before Geralt) - CjUncover fades it in again
+latent quest function CjCoverIfSeen(x : float, y : float, z : float, fact : string) {
+    if (CjSeen(Vector(x, y, z), 45.0) && !theGame.IsBlackscreenOrFading()) {
+        theGame.FadeOutAsync(0.35);
+        Sleep(0.4);
+        FactsAdd(fact, 1);
+    }
+}
+
+latent quest function CjUncover(fact : string) {
+    if (FactsQuerySum(fact) > 0) {
+        Sleep(0.8);                         // (the people are in the world: their community spawned them)
+        theGame.FadeInAsync(0.6);
+        FactsRemove(fact);
+    }
+}
+
+// someone goes from the world (Go away): when they are out of the picture, or after `seconds` at the latest
+// (05.11.: the thieves vanished in front of Geralt)
+latent quest function CjWaitUnseen(tag : name, seconds : float) {
+    var who : CEntity;
+    var waited : float;
+    who = theGame.GetEntityByTag(tag);
+    while (who && waited < seconds && CjSeen(who.GetWorldPosition(), 40.0)) {
+        Sleep(0.5);
+        waited += 0.5;
+        who = theGame.GetEntityByTag(tag);
+    }
+}
+
+// a race's course drawn on the map while it runs, as q201 draws its race (EnableMapPath of a path entity by its tag;
+// q201: line width 7, segments of 5 m, the map's own colour)
+quest function CjMapPath(tag : name, on : bool) {
+    var maps : CCommonMapManager;
+    maps = theGame.GetCommonMapManager();
+    if (maps) {
+        maps.EnableMapPath(tag, on, 7.0, 5.0, Color(0, 0, 0, 0));
+    }
+}
+
 latent quest function CjSetupItem(tag : name, item : string, count : int) {
     var found : CEntity;
     var fact : string;
@@ -340,6 +432,7 @@ latent quest function CjSetupItem(tag : name, item : string, count : int) {
             if (have >= count) {
                 FactsAdd(fact, 1);              // (not done: a save loaded later tries again)
             }
+            CjContainerAwake(ge);
         } else {
             LogChannel('Cj', "setup|item: no inventory on " + NameToString(tag));
         }
@@ -377,7 +470,7 @@ latent quest function CjRunStart(base : string, run : int) {
 }
 
 // ... and waits until a newer run has started (or Conjunction retires it): then it steps aside - its people
-// and places go (Maxim 06.10.: three fathers after three runs)
+// and places go (MaximdeWinter 06.10.: three fathers after three runs)
 latent quest function CjRunRetired(base : string, run : int, retired : string) {
     while (FactsQueryLatestValue(base + "_run") <= run && FactsQuerySum(retired) < 1) {
         Sleep(1.0);
@@ -393,6 +486,41 @@ latent quest function CjRunGone(tag : name) {
         if ((CActor)found[i]) {
             found[i].Destroy();
         }
+    }
+}
+
+// ... and kept out while the run is retired: a community spawns its people again a moment after a save loads (MaximdeWinter
+// 23.10.: after Build & Play's live loading the old run's citizen stood beside the new one's - both gave the quest)
+latent quest function CjRunGoneKeep(tag : name) {
+    var found : array<CEntity>;
+    var i : int;
+    while (true) {
+        found.Clear();
+        theGame.GetEntitiesByTag(tag, found);
+        for (i = 0; i < found.Size(); i += 1) {
+            if ((CActor)found[i]) {
+                found[i].Destroy();
+            }
+        }
+        Sleep(1.0);
+    }
+}
+
+// people gone (Go away, Hide place) kept out while `fact` is 1 or more: a community sets its people anew when the
+// place loads again (05.11.: Marta stood there again after the player came back) - each one taken away out of
+// sight; Show place sets the fact to 0
+latent quest function CjKeepGone(tag : name, fact : string) {
+    var found : array<CEntity>;
+    var i : int;
+    while (FactsQueryLatestValue(fact) >= 1) {
+        found.Clear();
+        theGame.GetEntitiesByTag(tag, found);
+        for (i = 0; i < found.Size(); i += 1) {
+            if ((CActor)found[i] && !CjSeen(found[i].GetWorldPosition(), 40.0)) {
+                found[i].Destroy();
+            }
+        }
+        Sleep(1.0);
     }
 }
 
@@ -423,7 +551,7 @@ latent function CjClueRun(tag : name, how : int, early : bool) {
     CjClueHow(clue, how);
     CjClueSwitchOn(clue);
     // asked again each time by its tag: the place streams out when the player goes far (or flies in the editor) and
-    // the clue comes back as a new entity - the old handle never sees it examined (Maxim 01.10.: E, nothing)
+    // the clue comes back as a new entity - the old handle never sees it examined (MaximdeWinter 01.10.: E, nothing)
     while (true) {
         found = theGame.GetEntityByTag(tag);
         if ((W3MonsterClue)found != clue && (W3MonsterClue)found) {
@@ -440,7 +568,7 @@ latent function CjClueRun(tag : name, how : int, early : bool) {
     }
     LogChannel('Cj', "clue|" + NameToString(tag) + " examined");
     // the player kneels / bends to it (the clue's interaction animation): what follows (a monologue scene) waits for
-    // it - started at once, the scene cut the animation off (Maxim 01.10.: "Geralt did not kneel")
+    // it - started at once, the scene cut the animation off (MaximdeWinter 01.10.: "Geralt did not kneel")
     if (early) {
         Sleep(0.3);                         // (the scene takes about a second to come)
     } else if (clue.interactionAnim != PEA_None) {
@@ -501,7 +629,7 @@ latent quest function CjClueGroupSeen(tag : name) {
 
 function CjClueSwitchOn(clue : W3MonsterClue) {
     // Geralt kneels and looks at it, as at every clue of the game's contracts (their layers set it on each clue;
-    // the catalog's generic clue templates leave it out - E then did nothing to see, Maxim 01.10.)
+    // the catalog's generic clue templates leave it out - E then did nothing to see, MaximdeWinter 01.10.)
     if (clue.interactionAnim == PEA_None) {
         if ((W3ClueCorpse)clue) {
             clue.interactionAnim = PEA_InspectLow;
@@ -559,7 +687,7 @@ quest function CjFade(fadeOut : bool, seconds : float) {
     }
 }
 
-// a portal (Maxim 01.10., Keira's hut and her bath): stepping into A takes the player to B's exit, into B (two-way)
+// a portal (MaximdeWinter 01.10., Keira's hut and her bath): stepping into A takes the player to B's exit, into B (two-way)
 // back to A's exit - a fade between (white like a mage's portal, or black). Runs beside the story as long as the quest
 // does; the portals' effect shows them open.
 function CjPortalFade(white : bool) {
@@ -684,10 +812,16 @@ quest function CjLights(tag : name, on : bool, fade : bool) {
     for (i = 0; i < ents.Size(); i += 1) {
         light = (CGameplayLightComponent)ents[i].GetComponentByClassName('CGameplayLightComponent');
         if (light) {
-            if (fade) {
+            // (a flame goes out at once only: faded, the coal fire's burnt on long after its light, 13.11.)
+            if (fade && !ents[i].HasEffect('fire')) {
                 light.SetFadeLight(on);
             } else {
                 light.SetLight(on);
+                // (SetLight lets the flame's effect fade out, the glowing glass with it, for seconds:
+                // at once means its effects end now; SetLight(true) plays them again)
+                if (!on) {
+                    ents[i].DestroyAllEffects();
+                }
             }
             continue;
         }
@@ -749,8 +883,42 @@ quest function CjShake(strength : float) {
     GCameraShake(strength);
 }
 
+// the game's weathers by their names as the game writes them (a quest's comes in lower case: radish takes
+// [a-z_0-9] only; the game knows 'WT_Rain_Storm', not 'wt_rain_storm' - 05.11.: the weather never changed)
+function CjWeatherName(weather : name) : name {
+    var all : array<name>;
+    var i : int;
+    all.PushBack('WT_Clear');
+    all.PushBack('WT_Light_Clouds');
+    all.PushBack('WT_Mid_Clouds');
+    all.PushBack('WT_Mid_Clouds_Dark');
+    all.PushBack('WT_Mid_Clouds_Fog');
+    all.PushBack('WT_Heavy_Clouds');
+    all.PushBack('WT_Heavy_Clouds_Dark');
+    all.PushBack('WT_Heavy_Distant');
+    all.PushBack('WT_Grey_Sky');
+    all.PushBack('WT_Light_Rain');
+    all.PushBack('WT_Sun_Shower');
+    all.PushBack('WT_Rain_Storm');
+    all.PushBack('WT_Fog');
+    all.PushBack('WT_Snow');
+    all.PushBack('WT_Blizzard');
+    all.PushBack('WT_Wild_Hunt');
+    all.PushBack('WT_Battle');
+    all.PushBack('WT_Battle_Forest');
+    all.PushBack('WT_lessun_forest');
+    for (i = 0; i < all.Size(); i += 1) {
+        if (StrLower(NameToString(all[i])) == StrLower(NameToString(weather))) {
+            return all[i];
+        }
+    }
+    return weather;
+}
+
 quest function CjWeather(weather : name, blend : float) {
-    RequestWeatherChangeTo(weather, blend, false);
+    if (!RequestWeatherChangeTo(CjWeatherName(weather), blend, false)) {
+        LogChannel('Cj', "weather|the game has no weather " + NameToString(weather));
+    }
 }
 
 quest function CjMessage(text : string) {
@@ -758,6 +926,45 @@ quest function CjMessage(text : string) {
 }
 
 // open / close / lock (with a key item) / unlock a door
+// a clue for the witcher senses on or off, as the game's quests set one (FocusClueManager, forced: there, usable,
+// seen - or none of it)
+quest function CjFocusClue(tag : name, on : bool) {
+    FocusClueManager(tag, FCAA_ForceSet, on, on, false, on, false, false);
+}
+
+// a part of a thing on or off by its name - what the player talks to or uses (EntityComponentQuest)
+quest function CjPart(tag : name, part : name, on : bool) {
+    EntityComponentQuest(tag, part, on);
+}
+
+// another look of a thing (ApplyAppearance: a house burnt, a cart empty)
+quest function CjThingLook(tag : name, look : name) {
+    ApplyAppearance(tag, look);
+}
+
+// a move of a thing the game made for it (a gate raised, a shelf pushed aside): 0 once, 1 back, 2 again and
+// again, 3 stop (PlayPropertyAnimation, as gate.ws plays its "raise")
+quest function CjThingAnim(tag : name, anim : name, how : int) {
+    var ents : array<CEntity>;
+    var g : CGameplayEntity;
+    var i : int;
+    theGame.GetEntitiesByTag(tag, ents);
+    for (i = 0; i < ents.Size(); i += 1) {
+        g = (CGameplayEntity)ents[i];
+        if (g) {
+            if (how == 3) {
+                g.StopPropertyAnimation(anim);
+            } else if (how == 1) {
+                g.PlayPropertyAnimation(anim, 1, 1.0, PCM_Backward);
+            } else if (how == 2) {
+                g.PlayPropertyAnimation(anim, 0, 1.0, PCM_Forward);
+            } else {
+                g.PlayPropertyAnimation(anim, 1, 1.0, PCM_Forward);
+            }
+        }
+    }
+}
+
 quest function CjDoor(tag : name, doorState : string, key : string) {
     var keyName : name;
     if (key != "") {
@@ -881,15 +1088,13 @@ latent quest function CjEscort(tag : name, path : string, lead : bool, run : boo
     }
     LogChannel('Cj', "escort|" + NameToString(tag) + "|start|" + IntToString(pts.Size()) + " points");
     if (lead) {
+        // the person follows by the quest's scripted action (CAIFollowAction - script moves are refused while a
+        // community leads them, 05.11.): here only the wait for both at the end
         goal = pts[pts.Size() - 1];
         while (VecDistance2D(thePlayer.GetWorldPosition(), goal) > 5.0
                || VecDistance2D(npc.GetWorldPosition(), goal) > 8.0) {
-            if (VecDistance2D(npc.GetWorldPosition(), thePlayer.GetWorldPosition()) > 3.0 && !npc.IsMoving()) {
-                npc.ActionMoveToDynamicNodeAsync(thePlayer, mt, 1.0, 2.5, true);
-            }
             Sleep(0.5);
         }
-        npc.ActionCancelAll();
         return;
     }
     k = 0;
@@ -1304,7 +1509,7 @@ latent quest function CjHasItemsN(itemName : name, count : int, fact : string) {
         + "/" + IntToString(count) + " -> " + fact);
 }
 
-// equip step (Maxim, 01.10.): waits until the player wears / holds the item in one of their slots, then the fact
+// equip step (MaximdeWinter, 01.10.): waits until the player wears / holds the item in one of their slots, then the fact
 function CjIsEquipped(itemName : name) : bool {
     var witcher : W3PlayerWitcher;
     witcher = GetWitcherPlayer();
@@ -1362,6 +1567,7 @@ latent quest function CjSetupItemN(tag : name, itemName : name, count : int) {
             }
             LogChannel('Cj', "setup|item in: " + NameToString(itemName) + " x"
                 + IntToString(inv.GetItemQuantityByName(itemName)));
+            CjContainerAwake(ge);
         } else {
             LogChannel('Cj', "setup|item: no inventory on " + NameToString(tag));
         }
@@ -1500,7 +1706,7 @@ latent quest function CjWaitGame(what : int, percent : int) {
 }
 
 // a person of the quest whose template has a talk of its own (a merchant, a smith): it is switched off whenever he
-// is there (he comes anew after a phase or out of streaming) - the quest's talks only (Maxim 02.10.)
+// is there (he comes anew after a phase or out of streaming) - the quest's talks only (MaximdeWinter 02.10.)
 latent quest function CjOwnTalkOff(tag : name) {
     var e : CEntity;
     var c : CComponent;
@@ -1529,7 +1735,9 @@ function CjPassedPoint(pos : Vector, pts : array<Vector>, k : int) : int {
     var j, last : int;
     var near : float;
     last = pts.Size() - 1;
-    j = last;
+    // only the next point or the one after it (one may be cut short): a way that ends where it began was done before
+    // the person took a step (05.11.: any later point within reach counted) - the end only after the point before it
+    j = Min(k + 1, last);
     while (j >= k) {
         near = 4.0;
         if (j == last) {
@@ -1585,6 +1793,25 @@ latent quest function CjWaitNear(tag : name, radius : float, x : float, y : floa
         if (!close) {
             Sleep(0.3);
         }
+    }
+}
+
+// the other way round: until the player is farther than the radius from the person (else the spot) - a talk near
+// that comes every time waits for this first, or it starts again while the player still stands by (05.11.)
+latent quest function CjWaitAway(tag : name, radius : float, x : float, y : float, z : float) {
+    var e : CEntity;
+    var where, p : Vector;
+    while (true) {
+        e = theGame.GetEntityByTag(tag);
+        where = Vector(x, y, z, 1);
+        if (e) {
+            where = e.GetWorldPosition();
+        }
+        p = thePlayer.GetWorldPosition();
+        if (VecDistance2D(p, where) > radius || AbsF(p.Z - where.Z) >= 4.0) {
+            return;
+        }
+        Sleep(0.5);
     }
 }
 

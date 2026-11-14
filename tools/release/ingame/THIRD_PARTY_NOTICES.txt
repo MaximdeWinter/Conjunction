@@ -1,0 +1,34 @@
+Conjunction - third-party software
+
+Conjunction runs in the game as a TW3SE mod. Its files bring the software below. The full license texts are in the
+licenses folder beside this file.
+
+In bin\x64_dx12\tw3se\plugins:
+
+Qt 6.11.2 (cj_qt\Qt6Core.dll, Qt6Gui.dll, Qt6OpenGL.dll, platforms\qwindows.dll) - The Qt Company Ltd. - LGPL-3.0
+  (licenses/LGPL-3.0.txt, which builds on licenses/GPL-3.0.txt). The Qt libraries are separate files in
+  tw3se\plugins\cj_qt; you can replace them with your own build of the same version. Source code:
+  https://code.qt.io and https://download.qt.io/official_releases/qt/6.11/6.11.2/
+SQLite 3.50.4 (in cj_core.dll) - public domain
+stb_image 2.30 and stb_image_write 1.16 (in cj_core.dll) - Sean Barrett - public domain
+TweetNaCl 20140427 (in cj_core.dll) - Daniel J. Bernstein, Bernard van Gastel, Wesley Janssen, Tanja Lange, Peter
+  Schwabe, Sjaak Smetsers - public domain
+LZ4 1.9.4 (in cj_core.dll) - Yann Collet - BSD-2-Clause (licenses/LZ4.txt)
+Smooth scaling from Qt 6.11.2 (qimagescale.cpp, in cj_core.dll) - The Qt Company Ltd., Daniel M. Duley, Carsten
+  Haitzler and contributors, Willem Monsuwe - BSD-2-Clause and Imlib2 (licenses/qimagescale.txt)
+Pillow 12.2.0: its BCn decoders (public domain, CC0) and its resampling, premultiplying and pasting (in cj_core.dll) -
+  Secret Labs AB, Fredrik Lundh, Jeffrey A. Clark and contributors - MIT-CMU (licenses/Pillow.txt)
+
+In bin\x64_dx12\tw3se\mods\conjunction (Lua):
+
+The Lua files do what Conjunction's Python code did, with Python's own rules where the results have to be the same:
+regular expressions, sorting, numbers, text and difflib (difflib.lua, pyre.lua, pyrandom.lua) follow CPython 3.14 -
+Python Software Foundation - PSF License (licenses/Python.txt). yaml.lua writes YAML as PyYAML 6.0.3 does - Kirill
+Simonov, Ingy dot Net - MIT (licenses/PyYAML.txt).
+The windows are laid out and behave as Qt 6.11's widgets (ui/layout.lua, ui/qw.lua, ui/itemview.lua, ui/lineedit.lua,
+  ui/spinbox.lua, ui/textlayout.lua, qtbreak.lua and the character data in data/qt_unicode.lua follow Qt 6.11's
+  source) - The Qt Company Ltd. - LGPL-3.0 (licenses/LGPL-3.0.txt). These files are their own source code.
+Unicode character data (data/unicode.lua from Python 3.14's tables, data/qt_unicode.lua from Qt's) - Unicode, Inc. -
+  Unicode License v3 (licenses/Unicode.txt)
+Lucide icons (icons) - Lucide Contributors - ISC (licenses/Lucide.txt)
+The quest graph follows the look and the wire router of PathView - PathSim - MIT (licenses/PathView.txt)

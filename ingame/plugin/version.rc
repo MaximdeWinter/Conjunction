@@ -1,0 +1,42 @@
+// Name, maker and version in each DLL's properties (a DLL without them looks like malware to the virus scanners
+// Nexus asks; TW3SE's src\version.rc). build_plugin.bat compiles it once per DLL with /d CJ_FILE=1 or 2.
+#include <winver.h>
+
+#define CJ_VERSION_MAJOR 0
+#define CJ_VERSION_MINOR 2
+#define CJ_VERSION_PATCH 0
+#define CJ_VERSION_STR "0.2.0"
+
+#if CJ_FILE == 1
+#define FILE_DESC "Conjunction core (a TW3SE plugin: files, pictures, SQLite)"
+#define FILE_NAME "cj_core.dll"
+#else
+#define FILE_DESC "Conjunction Qt painter (a TW3SE plugin)"
+#define FILE_NAME "cj_qt.dll"
+#endif
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION CJ_VERSION_MAJOR, CJ_VERSION_MINOR, CJ_VERSION_PATCH, 0
+PRODUCTVERSION CJ_VERSION_MAJOR, CJ_VERSION_MINOR, CJ_VERSION_PATCH, 0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_DLL
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "MaximdeWinter"
+            VALUE "FileDescription", FILE_DESC
+            VALUE "FileVersion", CJ_VERSION_STR
+            VALUE "InternalName", FILE_NAME
+            VALUE "LegalCopyright", "MaximdeWinter"
+            VALUE "OriginalFilename", FILE_NAME
+            VALUE "ProductName", "Conjunction"
+            VALUE "ProductVersion", CJ_VERSION_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

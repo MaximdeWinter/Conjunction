@@ -1,5 +1,4 @@
-// conjunction: the game starts straight into the last save - no start videos, no main menu, no recap.
-// Once a start: back in the main menu later (quit to menu) it stays the menu.
+// conjunction: the game starts without its start videos and without the recap while a save loads.
 
 @addField(CR4Game)
 var w3sAutoloadDone : bool;
@@ -30,20 +29,5 @@ function OnConfigUI() {
     return result;
 }
 
-// the main menu, the first time it opens: what Continue does
-@wrapMethod(CR4IngameMenu)
-function OnConfigUI() {
-    var saves : array< SSavegameInfo >;
-    var result : bool;
-    result = wrappedMethod();
-    if (!isMainMenu || !theGame.CjAutoloadOnce()) {
-        return result;
-    }
-    theGame.ListSavedGames(saves);
-    if (saves.Size() > 0) {
-        CjOut("autoload: the last save");
-        SetIgnoreInput(true);
-        theGame.LoadLastGameInit();
-    }
-    return result;
-}
+// (the main menu stays the game's: no save is loaded by Conjunction any more - MaximdeWinter 14.11.; F8 there shows the
+// projects, a project is worked on in a session of its own: ingame/lua/conjunction/ui/start_menu.lua)
